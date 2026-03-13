@@ -199,7 +199,7 @@ class Camion:
             print("Camion occupé, impossible d'assigner une nouvelle demande.")
             return
         self.demandes_assignees.append(destination)
-        self.route = self.trouver_chemin_vers(self, destination, graphe)
+        self.route = self.trouver_chemin_vers(destination, graphe)
         self.disponible = False
         self._demarrer_deplacement(graphe)
         
@@ -211,9 +211,9 @@ class Camion:
             return
         noeud_act = self.position
         id_pro_noeud = self.route[0]
-        temps = graphe.adjacence[noeud_act.id][0][1].poids
+        temps = graphe.adjacence[noeud_act][0][1].poids
         for i in range(len(graphe.adjacence)) :
-            tuple_noeud_suiv = graphe.adjacence[noeud_act.id][i]
+            tuple_noeud_suiv = graphe.adjacence[noeud_act][i]
             if tuple_noeud_suiv[0] == id_pro_noeud:
                 temps = tuple_noeud_suiv[1].poids
         self.temps_restant_deplacement = temps
@@ -236,9 +236,9 @@ class Camion:
                 # Continuer vers le sommet suivant
                 noeud_act = self.position
                 id_pro_noeud = self.route[0]
-                temps = graphe.adjacence[noeud_act.id][0][1].poids
+                temps = graphe.adjacence[noeud_act][0][1].poids
                 for i in range(len(graphe.adjacence)) :
-                    tuple_noeud_suiv = graphe.adjacence[noeud_act.id][i]
+                    tuple_noeud_suiv = graphe.adjacence[noeud_act][i]
                 if tuple_noeud_suiv[0] == id_pro_noeud:
                     temps = tuple_noeud_suiv[1].poids
                 self.temps_restant_deplacement = temps
