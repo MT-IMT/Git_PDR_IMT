@@ -64,7 +64,7 @@ class Graphe:
         """Retourne l'objet Noeud correspondant à l'identifiant."""
         return self.noeuds.get(identifiant)
 
-    def ajouter_arete(self, source_id, cible_id, poids=1.0, **attributs):
+    def ajouter_arete(self, source_id, cible_id, poids, **attributs):
         """
         Ajoute une arête entre deux nœuds (identifiés par leurs id).
         Si le graphe n'est pas orienté, ajoute également l'arête inverse.
