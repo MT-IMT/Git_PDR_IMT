@@ -162,6 +162,7 @@ class Camion:
         self.demandes_assignees.append(destination)
         self.route = self.trouver_chemin_vers(destination, graphe)
         self.disponible = False
+        graphe.noeuds[destination].statut = "en attente"
         self._demarrer_deplacement(graphe)
         
     def _demarrer_deplacement(self, graphe):
@@ -326,6 +327,7 @@ if __name__ == "__main__":
     camion1.charger(1, 5, "Colis X")
     camion1.charger(2, 3, "Colis Y")
 
+    camion1.assigner_demande(g,2)
     # Recherche d'un chemin vers D
     camion1.trouver_chemin_vers(2, g)
 
