@@ -134,12 +134,12 @@ class Camion:
         self.route = []                       # liste d'identifiants de nœuds à suivre (itinéraire)
         self.temps_restant_deplacement = 0.0      # temps avant d'arriver au prochain sommet
 
-    def charger(self, poids_marchandise, description=""):
+    def charger(self, poids_marchandise, id_cargaison, marchandise):
         """Charge une marchandise si la capacité le permet."""
         if self.charge_actuelle + poids_marchandise > self.capacite:
             raise ValueError("Capacité insuffisante pour charger ce poids.")
         self.charge_actuelle += poids_marchandise
-        self.cargaison.append((poids_marchandise, description))
+        self.cargaison[id_cargaison] = marchandise
         print(f"Camion {self.id} : chargé {poids_marchandise} kg. Charge totale = {self.charge_actuelle}")
 
     def decharger(self, poids_marchandise):
@@ -147,8 +147,8 @@ class Camion:
         if not self.cargaison:
             raise ValueError("Aucune marchandise à décharger.")
         # Retire le dernier élément pour l'exemple
-        dernier = self.cargaison.pop()
-        self.charge_actuelle -= dernier[0]
+        dernier = self.cargaison.pop(id_cargaison)
+        self.charge_actuelle -= poids_marchandise
         print(f"Camion {self.id} : déchargé {dernier[0]} kg. Charge restante = {self.charge_actuelle}")
 
 
