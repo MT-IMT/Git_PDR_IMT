@@ -148,7 +148,7 @@ class Camion:
             raise ValueError("Aucune marchandise à décharger.")
         # Retire le dernier élément pour l'exemple
         dernier = self.cargaison.pop(id_cargaison)
-        self.charge_actuelle -= poids_marchandise
+        self.charge_actuelle -= dernier[0]
         print(f"Camion {self.id} : déchargé {dernier[0]} kg. Charge restante = {self.charge_actuelle}")
 
 
