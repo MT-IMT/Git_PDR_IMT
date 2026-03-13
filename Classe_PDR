@@ -133,7 +133,7 @@ class Graphe:
             liste_tuple_noeud_u = self.adjacence[u] #les id sont des nombres 0,1,2 etc
             for v in range(n):
                 for i in range(len(liste_tuple_noeud_u)) :
-                    if liste_tuple_noeud_u[i] == v :
+                    if liste_tuple_noeud_u[i][0] == v :
                         temps = liste_tuple_noeud_u[i][1].poids #les id sont des nombres 0,1,2 etc
                 if temps > 0:  # s'il y a une arête
                     nouvelle_dist = dist_courante + temps
