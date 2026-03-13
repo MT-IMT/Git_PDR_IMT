@@ -13,7 +13,7 @@ class Noeud:
         self.time_window = time_window          # (heure_ouverture, heure_fermeture)
         self.requete_presente = True            # True si une demande est active
         self.quantite = quantite                 # nombre de personnes ou marchandise
-        self.statut = "en_attente"               # "en_attente", "servi", "ignore"
+        self.statut = "en_attente"               # "en_attente", "servi", "cours_livraison"
         self.heure_apparition = heure_apparition # heure à laquelle la demande apparaît
 
     def __repr__(self):
