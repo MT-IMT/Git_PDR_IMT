@@ -130,7 +130,7 @@ class Camion:
         self.demandes_assignees= []  # liste des sommets à visiter
         self.position = position_depart    # id du nœud actuel
         self.charge_actuelle = 0            # charge courante
-        self.cargaison = []                  # liste des marchandises (peut être une liste d'objets)
+        self.cargaison = {}                  # dictionnaire des marchandises, l'identifiant de la marchandise est associer à la marchandise (peut être une liste d'objets)
         self.route = []                       # liste d'identifiants de nœuds à suivre (itinéraire)
         self.temps_restant_deplacement = 0.0      # temps avant d'arriver au prochain sommet
 
