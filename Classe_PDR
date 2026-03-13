@@ -251,8 +251,7 @@ class Camion:
     def _arriver_a_destination(self, graphe):
         """Action effectuée quand le camion atteint le dernier sommet de sa mission."""
         # Traiter la demande (marquer comme effectuée, etc.)
-        sommet_servi_id = graphe.noeuds[self.position]
-        sommet_servi = graphe.noeuds[sommet_servi_id]
+        sommet_servi = graphe.noeuds[self.position]
         sommet_servi.requete_presente = False
         sommet_servi.statut = "servi"
         print(f"Camion {self.id} a servi le sommet {sommet_servi.nom}")
