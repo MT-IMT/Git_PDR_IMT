@@ -1,12 +1,13 @@
 class Noeud:
     """Représente un nœud (sommet) du graphe."""
-    def __init__(self, identifiant, x: float, y: float, time_window: tuple[float, float],
+    def __init__(self, identifiant, nom, x: float, y: float, time_window: tuple[float, float],
                  quantite: float = 0.0, heure_apparition: float = 0.0):
         """
         :param identifiant: identifiant unique du nœud (str ou int)
         :param donnees: attributs supplémentaires (par exemple, nom, coordonnées)
         """
         self.id = identifiant
+        self.nom = nom
         self.x = x
         self.y = y
         self.time_window = time_window          # (heure_ouverture, heure_fermeture)
@@ -339,10 +340,10 @@ if __name__ == "__main__":
     g = Graphe(oriente=False)
 
     # Création des nœuds
-    A = Noeud("0", nom="Dépôt")
-    B = Noeud("1", nom="Magasin 1")
-    C = Noeud("2", nom="Magasin 2")
-    D = Noeud("3", nom="Magasin 3")
+    A = Noeud("0", "Dépôt", 100 , 20, (0,0))
+    B = Noeud("1", "Magasin 1", 100 , 20, (0,0))
+    C = Noeud("2", "Magasin 2", 100 , 20, (0,0))
+    D = Noeud("3", "Magasin 3", 100 , 20, (0,0))
 
     for noeud in [A, B, C, D]:
         g.ajouter_noeud(noeud)
