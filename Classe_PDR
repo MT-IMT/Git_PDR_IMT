@@ -211,7 +211,7 @@ class Camion:
         self.demandes_assignees.append(destination)
         self.route = self.trouver_chemin_vers(destination, graphe)
         self.disponible = False
-        graphe.noeuds[destination].statut = "en attente"
+        graphe.noeuds[destination].statut = "en_cours_de_livraison"
         self._demarrer_deplacement(graphe)
         
     def _demarrer_deplacement(self, graphe):
@@ -499,6 +499,7 @@ if __name__ == "__main__":
                 camion_le_plus_proche = min(camions_libres, key=lambda c: distance_entre(g, c.position, dest))
                 if camion_le_plus_proche.charge_actuelle >= g.noeuds[noeud_demand].quantite :
                     print(f"--> [DISPATCH] Assignation de la demande vers {dest} au {camion_le_plus_proche.id} (le plus proche)")
+                    camion_le_plus_proche.assigner_demande(g,dest)
                     camion_le_plus_proche.id_livr_en_cours = g.noeuds[noeud_demand].id_carg
                     camion_le_plus_proche.trouver_chemin_vers(dest, g)
                     camion_le_plus_proche.demander(g.noeuds[noeud_demand].id_carg, g.noeuds[noeud_demand].quantite,"colis")
