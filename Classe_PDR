@@ -407,53 +407,6 @@ def distance_entre(graphe, depart, arrivee):
 
 # Exemple d'utilisiation de nos classes
 if __name__ == "__main__":
-    # Création du graphe
-    g = Graphe(oriente=False)
-
-    # Création des nœuds
-    A = Noeud(0, "Dépôt", 100 , 20, (0,0))
-    B = Noeud(1, "Magasin 1", 100 , 20, (0,0))
-    C = Noeud(2, "Magasin 2", 100 , 20, (0,0))
-    D = Noeud(3, "Magasin 3", 100 , 20, (0,0))
-
-    for noeud in [A, B, C, D]:
-        g.ajouter_noeud(noeud)
-
-    # Ajout des arêtes avec poids (distances)
-    g.ajouter_arete(0, 1, poids=5) #Ajout du poids sur l'arête entre le noeud 0 (A) et 1 (B)
-    g.ajouter_arete(0, 2, poids=10)
-    g.ajouter_arete(1, 2, poids=3)
-    g.ajouter_arete(2, 3, poids=4)
-    g.ajouter_arete(1, 3, poids=8)
-
-    print(g)
-    print("Voisins du 1 :", [(cid, arete.poids) for cid, arete in g.voisins(1)])
-
-    # Création d'un camion
-    camion1 = Camion("Camion-01", capacite=20, position_depart=0)
-    camion2 = Camion("Camion-02", capacite=20, position_depart=0)
-    print(camion1)
-
-    # Chargement
-    camion1.charger(1, 5, "Colis X")
-    camion1.charger(2, 3, "Colis Y")
-
-    camion1.assigner_demande(g,2)
-    # Recherche d'un chemin vers D
-    camion1.trouver_chemin_vers(2, g)
-
-    # Déplacement pas à pas
-    camion1.avancer(g)   # va en 2 (ou selon le chemin trouvé)
-    camion1.avancer(g)   # etc.
-    camion1.avancer(g)
-    camion1.avancer(g)   # devrait arriver à 2
-
-    # Déchargement
-    camion1.decharger(1)
-    camion1.decharger(2)
-
-    print(camion1)
-
     # --- 1. CRÉATION DU GRAPHE (Grande ville en grille 4x4) ---
     g = Graphe(oriente=False)
     
