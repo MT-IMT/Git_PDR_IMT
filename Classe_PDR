@@ -409,6 +409,10 @@ def distance_entre(graphe, depart, arrivee):
 if __name__ == "__main__":
     # --- 1. CRÉATION DU GRAPHE (Grande ville en grille 4x4) ---
     g = Graphe(oriente=False)
+
+    # Création d'un camion
+    camion1 = Camion("Camion-01", capacite=20, position_depart=0)
+    camion2 = Camion("Camion-02", capacite=20, position_depart=0)
     
     # Ajout de 16 nœuds (A à P)
     noeuds_data = [
