@@ -460,7 +460,7 @@ if __name__ == "__main__":
 
     # --- 3. GESTION DYNAMIQUE DES DEMANDES (Avalanche de requêtes) ---
     demandes_futures = {
-        2: [(2,3),(15,8)],                 # Tour 2 : Les deux extrémités
+        2: [(2,3),(15,8)],    #(id_du_noeud_client,qte_demander)  # Tour 2 : Les deux extrémités
         5: [(3,2), (12,2), (7,2)],            # Tour 5 : 3 requêtes d'un coup
         8: [(1,2), (14,2), (2,2), (11,2)],      # Tour 8 : Énorme vague de 4 requêtes !
         15: [(4,2), (9,2), (6,2), (8,2)],       # Tour 15 : Encore 4 requêtes
