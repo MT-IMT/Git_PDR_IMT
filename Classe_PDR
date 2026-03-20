@@ -1,20 +1,24 @@
 class Noeud:
     """Représente un nœud (sommet) du graphe."""
-    def __init__(self, identifiant, nom, x: float, y: float, time_window: tuple[float, float],
-                 quantite: float = 0.0, heure_apparition: float = 0.0):
-        """
-        :param identifiant: identifiant unique du nœud (str ou int)
-        :param donnees: attributs supplémentaires (par exemple, nom, coordonnées)
-        """
+    def __init__(
+        self,
+        identifiant,
+        nom,
+        x: float,
+        y: float,
+        time_window: tuple[float, float],
+        quantite: float = 0.0,
+        heure_apparition: float = 0.0
+    ):
         self.id = identifiant
         self.nom = nom
         self.x = x
         self.y = y
         self.time_window = time_window          # (heure_ouverture, heure_fermeture)
         self.requete_presente = True            # True si une demande est active
-        self.quantite = quantite                 # nombre de personnes ou marchandise
-        self.statut = "en_attente"               # "en_attente", "servi", "en_cours_livraison"
-        self.heure_apparition = heure_apparition # heure à laquelle la demande apparaît
+        self.quantite = quantite
+        self.statut = "en_attente"              # "en_attente", "servi", "en_cours_livraison"
+        self.heure_apparition = heure_apparition
 
     def __repr__(self):
         return f"Noeud({self.id})"
@@ -26,12 +30,6 @@ class Noeud:
 class Arete:
     """Représente une arête (lien) entre deux nœuds."""
     def __init__(self, source, cible, poids=1.0, **attributs):
-        """
-        :param source: nœud de départ (objet Noeud)
-        :param cible: nœud d'arrivée (objet Noeud)
-        :param poids: poids / coût de l'arête (par défaut 1.0)
-        :param attributs: attributs supplémentaires (par exemple, distance, temps, nom de rue)
-        """
         self.source = source
         self.cible = cible
         self.poids = poids
@@ -44,14 +42,11 @@ class Arete:
 class Graphe:
     """Graphe orienté ou non, avec liste d'adjacence."""
     def __init__(self, oriente=False):
-        """
-        :param oriente: True si le graphe est orienté, False sinon (par défaut non orienté)
-        """
-        self.oriente = oriente #on verra si on oriente le graphe ou pas
-        self.noeuds = {}        # identifiant -> objet Noeud
-        self.aretes = []         # liste de toutes les arêtes (objets Arete)
+        self.oriente = oriente
+        self.noeuds = {}         # identifiant -> objet Noeud
+        self.aretes = []         # liste de toutes les arêtes
         self.adjacence = {}      # identifiant_source -> liste de (identifiant_cible, arete)
-        self.demandes = []            # liste des demandes sous forme de dict
+        self.demandes = []
 
     def ajouter_noeud(self, noeud):
         """Ajoute un nœud au graphe."""
@@ -64,11 +59,8 @@ class Graphe:
         """Retourne l'objet Noeud correspondant à l'identifiant."""
         return self.noeuds.get(identifiant)
 
-    def ajouter_arete(self, source_id, cible_id, poids, **attributs):
-        """
-        Ajoute une arête entre deux nœuds (identifiés par leurs id).
-        Si le graphe n'est pas orienté, ajoute également l'arête inverse.
-        """
+    def ajouter_arete(self, source_id, cible_id, poids=1.0, **attributs):
+        """Ajoute une arête entre deux nœuds."""
         if source_id not in self.noeuds:
             raise ValueError(f"Le nœud source {source_id} n'existe pas.")
         if cible_id not in self.noeuds:
@@ -79,27 +71,24 @@ class Graphe:
 
         arete = Arete(source, cible, poids, **attributs)
         self.aretes.append(arete)
-
         self.adjacence[source_id].append((cible_id, arete))
 
         if not self.oriente:
-            # Ajouter l'arête dans l'autre sens
             arete_inverse = Arete(cible, source, poids, **attributs)
             self.aretes.append(arete_inverse)
             self.adjacence[cible_id].append((source_id, arete_inverse))
 
     def voisins(self, noeud_id):
-        """Retourne la liste des identifiants des voisins d'un nœud."""
-        return [(cid, arete) for cid, arete in self.adjacence.get(noeud_id, [])]
+        """Retourne la liste des voisins d'un nœud."""
+        return self.adjacence.get(noeud_id, [])
 
     def poids_arete(self, source_id, cible_id):
-        """Retourne le poids de l'arête entre source et cible (ou None si pas d'arête directe)."""
+        """Retourne le poids de l'arête entre source et cible."""
         for cid, arete in self.adjacence.get(source_id, []):
             if cid == cible_id:
                 return arete.poids
         return None
 
-#Section expérimentale
     def construire_demandes(self):
         """Remplit la liste des demandes à partir des sommets actifs."""
         self.demandes = []
@@ -112,179 +101,116 @@ class Graphe:
                     "heure_apparition": s.heure_apparition
                 })
 
-    def dijkstra(self, depart_idx: int, arrivee_idx: int) -> tuple[list[int], float]:
+    def dijkstra(self, depart_id, arrivee_id):
         """
         Calcule le plus court chemin entre deux sommets.
-        Retourne (liste des indices des sommets à parcourir, temps total).
+        Retourne (chemin, distance_totale).
         """
-        n = len(self.noeuds)
-        distances = [float('inf')] * n
-        distances[depart_idx] = 0
-        precedent = [-1] * n
-        pq = [(0, depart_idx)]  # (distance cumulée, sommet)
         from heapq import heappush, heappop
 
-        while pq:
-            dist_courante, u = heappop(pq)
+        if depart_id not in self.noeuds or arrivee_id not in self.noeuds:
+            return [], float("inf")
+
+        distances = {nid: float("inf") for nid in self.noeuds}
+        precedent = {nid: None for nid in self.noeuds}
+        distances[depart_id] = 0
+
+        tas = [(0, depart_id)]
+
+        while tas:
+            dist_courante, u = heappop(tas)
+
             if dist_courante > distances[u]:
                 continue
-            if u == arrivee_idx:
-                break
-            liste_tuple_noeud_u = self.adjacence[u] #les id sont des nombres 0,1,2 etc
-            for v in range(n):
-                temps = 0
-                for i in range(len(liste_tuple_noeud_u)) :
-                    if liste_tuple_noeud_u[i][0] == v :
-                        temps = liste_tuple_noeud_u[i][1].poids #les id sont des nombres 0,1,2 etc
-                if temps > 0:  # s'il y a une arête
-                    nouvelle_dist = dist_courante + temps
-                    if nouvelle_dist < distances[v]:
-                        distances[v] = nouvelle_dist
-                        precedent[v] = u
-                        heappush(pq, (nouvelle_dist, v))
 
-        # Reconstruction du chemin
+            if u == arrivee_id:
+                break
+
+            for v, arete in self.voisins(u):
+                nouvelle_dist = dist_courante + arete.poids
+                if nouvelle_dist < distances[v]:
+                    distances[v] = nouvelle_dist
+                    precedent[v] = u
+                    heappush(tas, (nouvelle_dist, v))
+
+        if distances[arrivee_id] == float("inf"):
+            return [], float("inf")
+
         chemin = []
-        idx = arrivee_idx
-        while idx != -1:
-            chemin.append(idx)
-            idx = precedent[idx]
+        courant = arrivee_id
+        while courant is not None:
+            chemin.append(courant)
+            courant = precedent[courant]
         chemin.reverse()
-        return chemin, distances[arrivee_idx]
-# Fin Section Expérimentale
+
+        return chemin, distances[arrivee_id]
+
     def __repr__(self):
-        return f"Graphe({self.oriente=}, {len(self.noeuds)} nœuds, {len(self.aretes)} arêtes)"
+        return f"Graphe(oriente={self.oriente}, {len(self.noeuds)} nœuds, {len(self.aretes)} arêtes)"
 
 
 class Camion:
     """Classe indépendante représentant un camion pouvant se déplacer sur un graphe."""
     def __init__(self, identifiant, capacite, position_depart):
-        """
-        :param identifiant: identifiant unique du camion
-        :param capacite: capacité maximale de chargement (en tonnes, volume, etc.)
-        :param position_depart: identifiant du nœud de départ
-        """
         self.id = identifiant
         self.capacite = capacite
-        self.disponible = True                    # True = disponible, False = en livraison
-        self.demandes_assignees= []  # liste des sommets à visiter
-        self.position = position_depart    # id du nœud actuel
+        self.disponible = True
+        self.demandes_assignees = []
+        self.position = position_depart
         self.cible_actuelle = None
-        self.charge_actuelle = 0            # charge courante
-        self.cargaison = {}                  # dictionnaire des marchandises, l'identifiant de la marchandise est associer à la marchandise (peut être une liste d'objets)
-        self.route = []                       # liste d'identifiants de nœuds à suivre (itinéraire)
-        self.temps_restant_deplacement = 0.0      # temps avant d'arriver au prochain sommet
+        self.charge_actuelle = 0
+        self.cargaison = {}
+        self.route = []
+        self.temps_restant_deplacement = 0.0
 
     def charger(self, id_cargaison, poids_marchandise, marchandise):
         """Charge une marchandise si la capacité le permet."""
         if self.charge_actuelle + poids_marchandise > self.capacite:
             raise ValueError("Capacité insuffisante pour charger ce poids.")
         self.charge_actuelle += poids_marchandise
-        self.cargaison[id_cargaison] = [poids_marchandise,marchandise]
+        self.cargaison[id_cargaison] = [poids_marchandise, marchandise]
         print(f"Camion {self.id} : chargé {poids_marchandise} kg. Charge totale = {self.charge_actuelle}")
 
     def decharger(self, id_cargaison):
-        """Décharge une marchandise (simplifié : enlève le dernier chargement ou par description)."""
-        if not self.cargaison:
-            raise ValueError("Aucune marchandise à décharger.")
-        # Retire le dernier élément pour l'exemple
-        dernier = self.cargaison.pop(id_cargaison)
-        self.charge_actuelle -= dernier[0]
-        print(f"Camion {self.id} : déchargé {dernier[0]} kg. Charge restante = {self.charge_actuelle}")
-
-
-#Section Expérimentale
+        """Décharge une marchandise."""
+        if id_cargaison not in self.cargaison:
+            raise ValueError("Cette cargaison n'existe pas.")
+        marchandise = self.cargaison.pop(id_cargaison)
+        self.charge_actuelle -= marchandise[0]
+        print(f"Camion {self.id} : déchargé {marchandise[0]} kg. Charge restante = {self.charge_actuelle}")
 
     def assigner_demande(self, graphe, destination):
         """Assigne une nouvelle demande au camion et calcule la route."""
-        if not self.disponible:
-            print("Camion occupé, impossible d'assigner une nouvelle demande.")
+        if self.cible_actuelle is not None or self.route:
+            print(f"Camion {self.id} occupé, impossible d'assigner une nouvelle demande.")
             return
+
         self.demandes_assignees.append(destination)
         self.route = self.trouver_chemin_vers(destination, graphe)
-        self.disponible = False
-        graphe.noeuds[destination].statut = "en attente"
-        self._demarrer_deplacement(graphe)
-        
-    def _demarrer_deplacement(self, graphe):
-        """Initialise le déplacement vers le premier sommet de la route."""
-        if not self.route:
-            # Aucun déplacement nécessaire (déjà sur place)
-            self._arriver_a_destination(graphe)
-            return
-        noeud_act = self.position
-        id_pro_noeud = self.route[0]
-        temps = graphe.adjacence[noeud_act][0][1].poids
-        for i in range(len(graphe.adjacence[noeud_act])) :
-            tuple_noeud_suiv = graphe.adjacence[noeud_act][i]
-            if tuple_noeud_suiv[0] == id_pro_noeud:
-                temps = tuple_noeud_suiv[1].poids
-        self.temps_restant_deplacement = temps
 
-    def mettre_a_jour(self, dt: float, graphe):
-        """
-        Met à jour la position du camion après un intervalle de temps dt.
-        À appeler à chaque pas de simulation.
-        """
-        if self.disponible or self.temps_restant_deplacement <= 0:
-            return
-
-        self.temps_restant_deplacement -= dt
-        if self.temps_restant_deplacement <= 0:
-            # Arrivée au sommet suivant
-            prochain_idx = self.route[0]
-            self.position = prochain_idx
-            self.route.pop(0)
-            if self.route:
-                # Continuer vers le sommet suivant
-                noeud_act = self.position
-                id_pro_noeud = self.route[0]
-                temps = graphe.adjacence[noeud_act][0][1].poids
-                for i in range(len(graphe.adjacence[noeud_act])) :
-                    tuple_noeud_suiv = graphe.adjacence[noeud_act][i]
-                    if tuple_noeud_suiv[0] == id_pro_noeud:
-                        temps = tuple_noeud_suiv[1].poids
-                self.temps_restant_deplacement = temps
-                self._demarrer_deplacement(graphe)
-            else:
-                # Tous les sommets de la route ont été visités
-                self._arriver_a_destination(graphe)
-
-    def _arriver_a_destination(self, graphe):
-        """Action effectuée quand le camion atteint le dernier sommet de sa mission."""
-        # Traiter la demande (marquer comme effectuée, etc.)
-        sommet_servi = graphe.noeuds[self.position]
-        sommet_servi.requete_presente = False
-        sommet_servi.statut = "servi"
-        print(f"Camion {self.id} a servi le sommet {sommet_servi.nom}")
-        self.disponible = True
-
-        
-# Fin Section Expérimentale
-
+        if self.route:
+            self.disponible = False
+            graphe.noeuds[destination].statut = "en_attente"
+        else:
+            print(f"Camion {self.id} : impossible d'atteindre {destination}.")
 
     def definir_itineraire(self, chemin):
-        """Définit la liste des nœuds à parcourir (séquence d'identifiants)."""
+        """Définit la liste des nœuds à parcourir."""
         self.route = chemin[:]
         print(f"Camion {self.id} : nouvel itinéraire défini : {self.route}")
 
     def avancer(self, graphe):
-        """
-        Avance d'un pas le long de l'itinéraire, si possible.
-        Met à jour la position et supprime le premier nœud de la route.
-        """
+        """Avance d'un pas le long de l'itinéraire."""
         if not self.route:
             print(f"Camion {self.id} : déjà à destination ou aucun itinéraire.")
             return False
 
         prochain_noeud = self.route[0]
-        # Vérifier que l'arête existe (graphe non orienté, donc une direction suffit)
         poids = graphe.poids_arete(self.position, prochain_noeud)
         if poids is None:
             print(f"Erreur : pas d'arête directe de {self.position} vers {prochain_noeud}.")
             return False
 
-        # Effectuer le déplacement
         self.position = prochain_noeud
         self.route.pop(0)
         print(f"Camion {self.id} : arrivé au nœud {self.position}")
@@ -292,136 +218,119 @@ class Camion:
 
     def trouver_chemin_vers(self, destination, graphe):
         """
-        Utilise un algorithme de plus court chemin (Dijkstra simple) pour trouver un itinéraire.
-        Met à jour self.route avec le chemin trouvé (liste d'ids).
+        Utilise Dijkstra pour trouver un itinéraire.
+        Met à jour self.route avec le chemin trouvé (sans inclure la position actuelle).
         """
-        # Implémentation basique de Dijkstra (pour des poids positifs)
-        from heapq import heappush, heappop
+        chemin, distance = graphe.dijkstra(self.position, destination)
 
-        distances = {noeud_id: float('inf') for noeud_id in graphe.noeuds}
-        distances[self.position] = 0
-        precedent = {noeud_id: None for noeud_id in graphe.noeuds}
-        tas = [(0, self.position)]
-
-        while tas:
-            dist_courante, noeud_courant = heappop(tas)
-            if noeud_courant == destination:
-                break
-            if dist_courante > distances[noeud_courant]:
-                continue
-            for voisin_id, arete in graphe.voisins(noeud_courant):
-                nouvelle_dist = dist_courante + arete.poids
-                if nouvelle_dist < distances[voisin_id]:
-                    distances[voisin_id] = nouvelle_dist
-                    precedent[voisin_id] = noeud_courant
-                    heappush(tas, (nouvelle_dist, voisin_id))
-
-        # Reconstruction du chemin
-        chemin = []
-        noeud = destination
-        while noeud is not None:
-            chemin.append(noeud)
-            noeud = precedent[noeud]
-        chemin.reverse()
-        if chemin[0] == self.position:
-            self.route = chemin[1:]   # on exclut la position actuelle
-            print(f"Camion {self.id} : chemin trouvé vers {destination} : {self.route}")
-        else:
+        if not chemin:
             print(f"Camion {self.id} : aucun chemin vers {destination}.")
             self.route = []
+            return self.route
 
+        if chemin[0] == self.position:
+            self.route = chemin[1:]
+        else:
+            self.route = chemin
+
+        print(f"Camion {self.id} : chemin trouvé vers {destination} : {self.route} (distance = {distance})")
         return self.route
-    
+
     def faire_un_tour(self, graphe):
         """
         Exécute un tour de simulation pour le camion.
         Gère le transit sur les arêtes en fonction de leur poids.
         """
-        # CAS 1 : Le camion est en cours de déplacement sur une arête
+        # CAS 1 : le camion est déjà en transit
         if self.cible_actuelle is not None:
-            self.temps_restant -= 1
-            if self.temps_restant <= 0:
-                # Le camion vient d'arriver à destination ce tour-ci
+            self.temps_restant_deplacement -= 1
+
+            if self.temps_restant_deplacement <= 0:
                 self.position = self.cible_actuelle
                 self.cible_actuelle = None
                 print(f"[Tour] Camion {self.id} est ARRIVÉ au nœud {self.position}.")
+
+                noeud_arrivee = graphe.noeuds[self.position]
+                noeud_arrivee.requete_presente = False
+                noeud_arrivee.statut = "servi"
+
+                if not self.route:
+                    self.disponible = True
             else:
-                print(f"[Tour] Camion {self.id} est en route vers {self.cible_actuelle} (reste {self.temps_restant} tours).")
+                print(
+                    f"[Tour] Camion {self.id} est en route vers {self.cible_actuelle} "
+                    f"(reste {self.temps_restant_deplacement} tours)."
+                )
             return
 
-        # CAS 2 : Le camion est sur un nœud et doit partir vers une nouvelle destination
+        # CAS 2 : le camion est sur un nœud et doit partir
         if self.route:
             prochain_noeud = self.route.pop(0)
             poids = graphe.poids_arete(self.position, prochain_noeud)
 
             if poids is None:
                 print(f"Erreur : pas d'arête directe de {self.position} vers {prochain_noeud}.")
-                self.route = [] # Annule la route en cas d'erreur
+                self.route = []
+                self.disponible = True
                 return
 
             self.cible_actuelle = prochain_noeud
-            # On soustrait 1 car le camion commence à avancer pendant ce tour
-            self.temps_restant = poids - 1 
-            
-            print(f"[Tour] Camion {self.id} QUITTE le nœud {self.position} en direction de {self.cible_actuelle}. (Distance totale : {poids})")
-            
-            # On retire la position actuelle car le camion est sur la route
-            self.position = None 
-            
-            # Cas particulier : si la distance était de 1, le camion arrive immédiatement
-            if self.temps_restant <= 0:
+            self.temps_restant_deplacement = poids - 1
+            print(
+                f"[Tour] Camion {self.id} QUITTE le nœud {self.position} "
+                f"en direction de {self.cible_actuelle}. (Distance totale : {poids})"
+            )
+
+            self.position = None
+            self.disponible = False
+
+            # Cas particulier : arrivée immédiate
+            if self.temps_restant_deplacement <= 0:
                 self.position = self.cible_actuelle
                 self.cible_actuelle = None
                 print(f"[Tour] Camion {self.id} est ARRIVÉ au nœud {self.position}.")
-        
-        # CAS 3 : Le camion est sur un nœud mais n'a nulle part où aller
+
+                noeud_arrivee = graphe.noeuds[self.position]
+                noeud_arrivee.requete_presente = False
+                noeud_arrivee.statut = "servi"
+
+                if not self.route:
+                    self.disponible = True
+
+        # CAS 3 : le camion attend
         else:
+            self.disponible = True
             print(f"[Tour] Camion {self.id} est en attente au nœud {self.position}.")
 
     def __repr__(self):
         return f"Camion({self.id}, capacité={self.capacite}, position={self.position})"
 
+
 def distance_entre(graphe, depart, arrivee):
     """Calcule la distance la plus courte entre deux nœuds sans modifier les camions."""
     if depart == arrivee:
         return 0
-        
-    from heapq import heappush, heappop
-    distances = {noeud_id: float('inf') for noeud_id in graphe.noeuds}
-    distances[depart] = 0
-    tas = [(0, depart)]
 
-    while tas:
-        dist_courante, noeud_courant = heappop(tas)
-        if noeud_courant == arrivee:
-            return dist_courante
-        if dist_courante > distances[noeud_courant]:
-            continue
-        for voisin_id, arete in graphe.voisins(noeud_courant):
-            nouvelle_dist = dist_courante + arete.poids
-            if nouvelle_dist < distances[voisin_id]:
-                distances[voisin_id] = nouvelle_dist
-                heappush(tas, (nouvelle_dist, voisin_id))
-                
-    return float('inf') # Si aucun chemin n'est trouvé
+    _, distance = graphe.dijkstra(depart, arrivee)
+    return distance
 
-# Exemple d'utilisiation de nos classes
+
 if __name__ == "__main__":
     # --- 1. CRÉATION DU GRAPHE (Grande ville en grille 4x4) ---
     g = Graphe(oriente=False)
 
-    # Création d'un camion
+    # Création des camions
     camion1 = Camion("Camion-01", capacite=20, position_depart=0)
     camion2 = Camion("Camion-02", capacite=20, position_depart=0)
-    
+
     # Ajout de 16 nœuds (A à P)
     noeuds_data = [
         (0, "A", 0, 0),   (1, "B", 5, 0),   (2, "C", 10, 0),  (3, "D", 15, 0),
         (4, "E", 0, 5),   (5, "F", 5, 5),   (6, "G", 10, 5),  (7, "H", 15, 5),
-        (8, "I", 0, 10),  (9, "J", 5, 10),  (10, "K", 10, 10),(11, "L", 15, 10),
-        (12, "M", 0, 15), (13, "N", 5, 15), (14, "O", 10, 15),(15, "P", 15, 15)
+        (8, "I", 0, 10),  (9, "J", 5, 10),  (10, "K", 10, 10), (11, "L", 15, 10),
+        (12, "M", 0, 15), (13, "N", 5, 15), (14, "O", 10, 15), (15, "P", 15, 15)
     ]
-    
+
     for id_n, nom, x, y in noeuds_data:
         g.ajouter_noeud(Noeud(id_n, nom, x, y, (0, 0), 100))
 
@@ -429,72 +338,69 @@ if __name__ == "__main__":
     for i in range(4):
         for j in range(4):
             noeud_actuel = i * 4 + j
-            # Routes horizontales (poids = 3)
             if j < 3:
                 g.ajouter_arete(noeud_actuel, noeud_actuel + 1, poids=3)
-            # Routes verticales (poids = 4)
             if i < 3:
                 g.ajouter_arete(noeud_actuel, noeud_actuel + 4, poids=4)
-                
-    # Quelques rocades rapides (diagonales, poids = 5)
+
+    # Quelques rocades rapides
     g.ajouter_arete(5, 10, poids=5)
     g.ajouter_arete(6, 9, poids=5)
     g.ajouter_arete(0, 5, poids=5)
     g.ajouter_arete(10, 15, poids=5)
 
-    # --- 2. CRÉATION DE LA FLOTTE (Seulement 2 camions !) ---
-    flotte = [camion1,camion2]
+    # --- 2. CRÉATION DE LA FLOTTE ---
+    flotte = [camion1, camion2]
 
-    # --- 3. GESTION DYNAMIQUE DES DEMANDES (Avalanche de requêtes) ---
+    # --- 3. GESTION DYNAMIQUE DES DEMANDES ---
     demandes_futures = {
-        2: [0,15],                 # Tour 2 : Les deux extrémités
-        5: [3, 12, 7],            # Tour 5 : 3 requêtes d'un coup
-        8: [1, 14, 2, 11],      # Tour 8 : Énorme vague de 4 requêtes !
-        15: [4, 9, 6, 8],       # Tour 15 : Encore 4 requêtes
-        20: [5, 10]                 # Tour 20 : Retour au centre
+        2: [0, 15],
+        5: [3, 12, 7],
+        8: [1, 14, 2, 11],
+        15: [4, 9, 6, 8],
+        20: [5, 10]
     }
-    
+
     demandes_en_attente = []
 
     print("\n--- DÉBUT DE LA SIMULATION (MODE SURCHARGE) ---")
     tour_actuel = 1
-    
+
     while any(c.route or c.cible_actuelle is not None for c in flotte) or demandes_futures or demandes_en_attente:
         print(f"\n--- TOUR {tour_actuel} ---")
-        
-        # 1. APPARITION DES NOUVELLES DEMANDES
+
+        # 1. Apparition des nouvelles demandes
         if tour_actuel in demandes_futures:
             nouvelles_destinations = demandes_futures.pop(tour_actuel)
             print(f">>> [ALERTE] Nouvelles demandes apparues pour les destinations : {nouvelles_destinations} ! <<<")
             demandes_en_attente.extend(nouvelles_destinations)
 
-        # 2. DISPATCHER INTELLIGENT
+        # 2. Dispatcher intelligent
         demandes_non_assignees = []
         for dest in demandes_en_attente:
-            camions_libres = [c for c in flotte if not c.route and c.cible_actuelle is None]
-            
+            camions_libres = [c for c in flotte if not c.route and c.cible_actuelle is None and c.position is not None]
+
             if camions_libres:
                 camion_le_plus_proche = min(camions_libres, key=lambda c: distance_entre(g, c.position, dest))
                 print(f"--> [DISPATCH] Assignation de la demande vers {dest} au {camion_le_plus_proche.id} (le plus proche)")
                 camion_le_plus_proche.trouver_chemin_vers(dest, g)
+                camion_le_plus_proche.disponible = False
             else:
                 demandes_non_assignees.append(dest)
-                
-        # Affichage critique : La file d'attente s'allonge !
+
         if demandes_non_assignees:
             print(f"!!! [SURCHARGE] {len(demandes_non_assignees)} requêtes en attente : {demandes_non_assignees} !!!")
-                
+
         demandes_en_attente = demandes_non_assignees
 
-        # 3. FAIRE AVANCER LES CAMIONS
+        # 3. Faire avancer les camions
         for camion in flotte:
             camion.faire_un_tour(g)
-            
+
         tour_actuel += 1
-        
-        # On augmente largement la limite de sécurité car les camions vont mettre du temps !
-        if tour_actuel > 250: 
+
+        if tour_actuel > 250:
             print("Limite de tours atteinte.")
             break
-            
+
     print("\n--- FIN DE LA SIMULATION ---")
