@@ -431,7 +431,7 @@ if __name__ == "__main__":
 
     # Création d'un camion
     camion1 = Camion("Camion-01", capacite=20, position_depart=1)
-    camion2 = Camion("Camion-01", capacite=20, position_depart=1)
+    camion2 = Camion("Camion-02", capacite=20, position_depart=1)
     print(camion1)
 
     # Chargement
