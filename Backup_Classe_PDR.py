@@ -1,12 +1,20 @@
 class Noeud:
     """Représente un nœud (sommet) du graphe."""
-    def __init__(self, identifiant, **donnees):
+    def __init__(self, identifiant, nom, x: float, y: float, time_window: tuple[float, float],
+                 quantite: float = 0.0, heure_apparition: float = 0.0):
         """
         :param identifiant: identifiant unique du nœud (str ou int)
         :param donnees: attributs supplémentaires (par exemple, nom, coordonnées)
         """
         self.id = identifiant
-        self.donnees = donnees  # dictionnaire pour stocker des informations optionnelles
+        self.nom = nom
+        self.x = x
+        self.y = y
+        self.time_window = time_window          # (heure_ouverture, heure_fermeture)
+        self.requete_presente = True            # True si une demande est active
+        self.quantite = quantite                 # nombre de personnes ou marchandise
+        self.statut = "en_attente"               # "en_attente", "servi", "en_cours_livraison"
+        self.heure_apparition = heure_apparition # heure à laquelle la demande apparaît
 
     def __repr__(self):
         return f"Noeud({self.id})"
@@ -43,6 +51,7 @@ class Graphe:
         self.noeuds = {}        # identifiant -> objet Noeud
         self.aretes = []         # liste de toutes les arêtes (objets Arete)
         self.adjacence = {}      # identifiant_source -> liste de (identifiant_cible, arete)
+        self.demandes = []            # liste des demandes sous forme de dict
 
     def ajouter_noeud(self, noeud):
         """Ajoute un nœud au graphe."""
@@ -55,7 +64,7 @@ class Graphe:
         """Retourne l'objet Noeud correspondant à l'identifiant."""
         return self.noeuds.get(identifiant)
 
-    def ajouter_arete(self, source_id, cible_id, poids=1.0, **attributs):
+    def ajouter_arete(self, source_id, cible_id, poids, **attributs):
         """
         Ajoute une arête entre deux nœuds (identifiés par leurs id).
         Si le graphe n'est pas orienté, ajoute également l'arête inverse.
@@ -90,6 +99,19 @@ class Graphe:
                 return arete.poids
         return None
 
+#Section expérimentale
+    def construire_demandes(self):
+        """Remplit la liste des demandes à partir des sommets actifs."""
+        self.demandes = []
+        for s in self.noeuds.values():
+            if s.requete_presente:
+                self.demandes.append({
+                    "nom": s.id,
+                    "coordonnees": (s.x, s.y),
+                    "time_window": s.time_window,
+                    "heure_apparition": s.heure_apparition
+                })
+# Fin Section Expérimentale
     def __repr__(self):
         return f"Graphe({self.oriente=}, {len(self.noeuds)} nœuds, {len(self.aretes)} arêtes)"
 
@@ -104,27 +126,101 @@ class Camion:
         """
         self.id = identifiant
         self.capacite = capacite
+        self.disponible = True                    # True = disponible, False = en livraison
+        self.demandes_assignees= []  # liste des sommets à visiter
         self.position = position_depart    # id du nœud actuel
         self.charge_actuelle = 0            # charge courante
-        self.cargaison = []                  # liste des marchandises (peut être une liste d'objets)
+        self.cargaison = {}                  # dictionnaire des marchandises, l'identifiant de la marchandise est associer à la marchandise (peut être une liste d'objets)
         self.route = []                       # liste d'identifiants de nœuds à suivre (itinéraire)
+        self.temps_restant_deplacement = 0.0      # temps avant d'arriver au prochain sommet
 
-    def charger(self, poids_marchandise, description=""):
+    def charger(self, id_cargaison, poids_marchandise, marchandise):
         """Charge une marchandise si la capacité le permet."""
         if self.charge_actuelle + poids_marchandise > self.capacite:
             raise ValueError("Capacité insuffisante pour charger ce poids.")
         self.charge_actuelle += poids_marchandise
-        self.cargaison.append((poids_marchandise, description))
+        self.cargaison[id_cargaison] = [poids_marchandise,marchandise]
         print(f"Camion {self.id} : chargé {poids_marchandise} kg. Charge totale = {self.charge_actuelle}")
 
-    def decharger(self, poids_marchandise):
+    def decharger(self, id_cargaison):
         """Décharge une marchandise (simplifié : enlève le dernier chargement ou par description)."""
         if not self.cargaison:
             raise ValueError("Aucune marchandise à décharger.")
         # Retire le dernier élément pour l'exemple
-        dernier = self.cargaison.pop()
+        dernier = self.cargaison.pop(id_cargaison)
         self.charge_actuelle -= dernier[0]
         print(f"Camion {self.id} : déchargé {dernier[0]} kg. Charge restante = {self.charge_actuelle}")
+
+
+#Section Expérimentale
+
+    def assigner_demande(self, graphe, destination):
+        """Assigne une nouvelle demande au camion et calcule la route."""
+        if not self.disponible:
+            print("Camion occupé, impossible d'assigner une nouvelle demande.")
+            return
+        self.demandes_assignees.append(destination)
+        self.route = self.trouver_chemin_vers(destination, graphe)
+        self.disponible = False
+        graphe.noeuds[destination].statut = "en attente"
+        self._demarrer_deplacement(graphe)
+        
+    def _demarrer_deplacement(self, graphe):
+        """Initialise le déplacement vers le premier sommet de la route."""
+        if not self.route:
+            # Aucun déplacement nécessaire (déjà sur place)
+            self._arriver_a_destination(graphe)
+            return
+        noeud_act = self.position
+        id_pro_noeud = self.route[0]
+        temps = graphe.adjacence[noeud_act][0][1].poids
+        for i in range(len(graphe.adjacence[noeud_act])) :
+            tuple_noeud_suiv = graphe.adjacence[noeud_act][i]
+            if tuple_noeud_suiv[0] == id_pro_noeud:
+                temps = tuple_noeud_suiv[1].poids
+        self.temps_restant_deplacement = temps
+
+    def mettre_a_jour(self, dt: float, graphe):
+        """
+        Met à jour la position du camion après un intervalle de temps dt.
+        À appeler à chaque pas de simulation.
+        """
+        if self.disponible or self.temps_restant_deplacement <= 0:
+            return
+
+        self.temps_restant_deplacement -= dt
+        if self.temps_restant_deplacement <= 0:
+            # Arrivée au sommet suivant
+            prochain_idx = self.route[0]
+            self.position = prochain_idx
+            self.route.pop(0)
+            if self.route:
+                # Continuer vers le sommet suivant
+                noeud_act = self.position
+                id_pro_noeud = self.route[0]
+                temps = graphe.adjacence[noeud_act][0][1].poids
+                for i in range(len(graphe.adjacence[noeud_act])) :
+                    tuple_noeud_suiv = graphe.adjacence[noeud_act][i]
+                    if tuple_noeud_suiv[0] == id_pro_noeud:
+                        temps = tuple_noeud_suiv[1].poids
+                self.temps_restant_deplacement = temps
+                self._demarrer_deplacement(graphe)
+            else:
+                # Tous les sommets de la route ont été visités
+                self._arriver_a_destination(graphe)
+
+    def _arriver_a_destination(self, graphe):
+        """Action effectuée quand le camion atteint le dernier sommet de sa mission."""
+        # Traiter la demande (marquer comme effectuée, etc.)
+        sommet_servi = graphe.noeuds[self.position]
+        sommet_servi.requete_presente = False
+        sommet_servi.statut = "servi"
+        print(f"Camion {self.id} a servi le sommet {sommet_servi.nom}")
+        self.disponible = True
+
+        
+# Fin Section Expérimentale
+
 
     def definir_itineraire(self, chemin):
         """Définit la liste des nœuds à parcourir (séquence d'identifiants)."""
@@ -205,34 +301,35 @@ if __name__ == "__main__":
     g = Graphe(oriente=False)
 
     # Création des nœuds
-    A = Noeud("0", nom="Dépôt")
-    B = Noeud("1", nom="Magasin 1")
-    C = Noeud("2", nom="Magasin 2")
-    D = Noeud("3", nom="Magasin 3")
+    A = Noeud(0, "Dépôt", 100 , 20, (0,0))
+    B = Noeud(1, "Magasin 1", 100 , 20, (0,0))
+    C = Noeud(2, "Magasin 2", 100 , 20, (0,0))
+    D = Noeud(3, "Magasin 3", 100 , 20, (0,0))
 
     for noeud in [A, B, C, D]:
         g.ajouter_noeud(noeud)
 
     # Ajout des arêtes avec poids (distances)
-    g.ajouter_arete("0", "1", poids=5) #Ajout du poids sur l'arête entre le noeud 0 (A) et 1 (B)
-    g.ajouter_arete("0", "2", poids=10)
-    g.ajouter_arete("1", "2", poids=3)
-    g.ajouter_arete("2", "3", poids=4)
-    g.ajouter_arete("1", "3", poids=8)
+    g.ajouter_arete(0, 1, poids=5) #Ajout du poids sur l'arête entre le noeud 0 (A) et 1 (B)
+    g.ajouter_arete(0, 2, poids=10)
+    g.ajouter_arete(1, 2, poids=3)
+    g.ajouter_arete(2, 3, poids=4)
+    g.ajouter_arete(1, 3, poids=8)
 
     print(g)
-    print("Voisins du 1 :", [(cid, arete.poids) for cid, arete in g.voisins("1")])
+    print("Voisins du 1 :", [(cid, arete.poids) for cid, arete in g.voisins(1)])
 
     # Création d'un camion
-    camion1 = Camion("Camion-01", capacite=20, position_depart="1")
+    camion1 = Camion("Camion-01", capacite=20, position_depart=1)
     print(camion1)
 
     # Chargement
-    camion1.charger(5, "Colis X")
-    camion1.charger(3, "Colis Y")
+    camion1.charger(1, 5, "Colis X")
+    camion1.charger(2, 3, "Colis Y")
 
+    camion1.assigner_demande(g,2)
     # Recherche d'un chemin vers D
-    camion1.trouver_chemin_vers("2", g)
+    camion1.trouver_chemin_vers(2, g)
 
     # Déplacement pas à pas
     camion1.avancer(g)   # va en 2 (ou selon le chemin trouvé)
@@ -241,8 +338,7 @@ if __name__ == "__main__":
     camion1.avancer(g)   # devrait arriver à 2
 
     # Déchargement
-    camion1.decharger(3)
-    camion1.decharger(5)
-
+    camion1.decharger(1)
+    camion1.decharger(2)
 
     print(camion1)
