@@ -485,7 +485,7 @@ if __name__ == "__main__":
                 demandes_en_attente.append(noeud_demand)
                 g.noeuds[noeud_demand].requete_presente = True
                 g.noeuds[noeud_demand].quantite = nouvelles_destinations[i][1]
-                g.noeuds[noeud_demand].statut = "en_attente"
+                g.noeuds[noeud_demand].statut = "en_cours_de_livraison"
                 g.noeuds[noeud_demand].id_carg = id_carg
                 id_carg = id_carg + 1
 
