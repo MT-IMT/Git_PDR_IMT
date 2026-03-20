@@ -430,8 +430,8 @@ if __name__ == "__main__":
     print("Voisins du 1 :", [(cid, arete.poids) for cid, arete in g.voisins(1)])
 
     # Création d'un camion
-    camion1 = Camion("Camion-01", capacite=20, position_depart=1)
-    camion2 = Camion("Camion-02", capacite=20, position_depart=1)
+    camion1 = Camion("Camion-01", capacite=20, position_depart=0)
+    camion2 = Camion("Camion-02", capacite=20, position_depart=0)
     print(camion1)
 
     # Chargement
