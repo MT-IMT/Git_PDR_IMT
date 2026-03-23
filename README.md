@@ -57,10 +57,59 @@ Attributs importants :
 - cargaison
 
 # 5. Gestion du chargement
-- demander(...)
+- demander(...) : 
 Ajoute une cargaison au dictionnaire cargaison, sans modifier réellement la charge.
 Ça ressemble plus à un enregistrement de demande qu’à un vrai chargement.
-- charger(...)
+- charger(...) : 
 Ajoute une marchandise si la capacité le permet.
-- decharger(...)
+- decharger(...) :
 Retire une marchandise du camion.
+
+# 6. Calcul d’itinéraire
+trouver_chemin_vers(destination, graphe) :
+C’est un Dijkstra classique part de la position actuelle du camion
+calcule la plus courte route jusqu’à destination
+reconstruit le chemin
+stocke le résultat dans self.route
+
+# 7. Déplacement du camion
+
+Il y a en réalité deux logiques de déplacement dans le code.
+
+# A. Logique “temps continu”
+
+Avec :
+- assigner_demande
+- _demarrer_deplacement
+- mettre_a_jour
+- _arriver_a_destination
+
+Ici l’idée est :
+on assigne une destination
+on calcule une route
+on enlève dt à un temps restant
+quand le temps arrive à 0, le camion passe au sommet suivant
+
+# B. Logique “tour par tour”
+Avec :
+- faire_un_tour
+Ici le déplacement se fait à chaque tour de simulation :
+- soit le camion est déjà en transit
+- soit il part vers le prochain nœud
+- soit il attend
+
+# 8. distance_entre(...)
+
+Fonction utilitaire qui calcule la distance la plus courte entre deux nœuds sans modifier les camions.
+Elle sert dans le dispatch pour choisir le camion libre le plus proche d’une demande.
+
+# 9. Ce que fait le main
+Étape 1 : création du graphe
+Étape 2 : création de deux camions
+Étape 3 : création d’une ville en grille 4x4. On crée 16 nœuds, de A à P, avec ids de 0 à 15.
+Étape 4 : ajout des routes
+Étape 5 : demandes futures
+Étape 6 : boucle de simulation
+1. Apparition des nouvelles demandes
+2. Dispatch intelligent
+3. Avancer les camions
