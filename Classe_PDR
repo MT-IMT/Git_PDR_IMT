@@ -11,7 +11,7 @@ class Noeud:
         self.x = x
         self.y = y
         self.time_window = time_window          # (heure_ouverture, heure_fermeture)
-        self.requete_presente = True            # True si une demande est active
+        self.requete_presente = False            # True si une demande est active
         self.quantite = quantite                 # nombre de personnes ou marchandise
         self.id_carg = 0
         self.statut = "en_attente"               # "en_attente", "servi", "en_cours_livraison"
@@ -258,7 +258,7 @@ class Camion:
                 # Tous les sommets de la route ont été visités
                 self._arriver_a_destination(graphe)
 
-    def _arriver_a_destination(self, graphe,id_cargaison):
+    def _arriver_a_destination(self, graphe,id_cargaison=None):
         """Action effectuée quand le camion atteint le dernier sommet de sa mission."""
         # Traiter la demande (marquer comme effectuée, etc.)
         sommet_servi = graphe.noeuds[self.position]
@@ -355,7 +355,7 @@ class Camion:
                 self.cible_actuelle = None
                 print(f"[Tour] Camion {self.id} est ARRIVÉ au nœud {self.position}.")
                 if self.position == self.destination:
-                    self._arriver_a_destination(g,self.id_livr_en_cours)
+                    self._arriver_a_destination(graphe,self.id_livr_en_cours)
             else:
                 print(f"[Tour] Camion {self.id} est en route vers {self.cible_actuelle} (reste {self.temps_restant} tours).")
             return
@@ -501,7 +501,6 @@ if __name__ == "__main__":
                     print(f"--> [DISPATCH] Assignation de la demande vers {dest} au {camion_le_plus_proche.id} (le plus proche)")
                     camion_le_plus_proche.assigner_demande(g,dest)
                     camion_le_plus_proche.id_livr_en_cours = g.noeuds[dest].id_carg
-                    camion_le_plus_proche.trouver_chemin_vers(dest, g)
                     camion_le_plus_proche.demander(g.noeuds[dest].id_carg, g.noeuds[dest].quantite,"colis")
             else:
                 demandes_non_assignees.append(dest)
