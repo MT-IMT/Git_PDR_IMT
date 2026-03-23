@@ -497,7 +497,7 @@ if __name__ == "__main__":
             
             if camions_libres:
                 camion_le_plus_proche = min(camions_libres, key=lambda c: distance_entre(g, c.position, dest))
-                if camion_le_plus_proche.charge_actuelle >= g.noeuds[noeud_demand].quantite :
+                if camion_le_plus_proche.charge_actuelle >= g.noeuds[dest].quantite :
                     print(f"--> [DISPATCH] Assignation de la demande vers {dest} au {camion_le_plus_proche.id} (le plus proche)")
                     camion_le_plus_proche.assigner_demande(g,dest)
                     camion_le_plus_proche.id_livr_en_cours = g.noeuds[noeud_demand].id_carg
