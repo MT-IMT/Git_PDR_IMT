@@ -500,9 +500,9 @@ if __name__ == "__main__":
                 if camion_le_plus_proche.charge_actuelle >= g.noeuds[dest].quantite :
                     print(f"--> [DISPATCH] Assignation de la demande vers {dest} au {camion_le_plus_proche.id} (le plus proche)")
                     camion_le_plus_proche.assigner_demande(g,dest)
-                    camion_le_plus_proche.id_livr_en_cours = g.noeuds[noeud_demand].id_carg
+                    camion_le_plus_proche.id_livr_en_cours = g.noeuds[dest].id_carg
                     camion_le_plus_proche.trouver_chemin_vers(dest, g)
-                    camion_le_plus_proche.demander(g.noeuds[noeud_demand].id_carg, g.noeuds[noeud_demand].quantite,"colis")
+                    camion_le_plus_proche.demander(g.noeuds[dest].id_carg, g.noeuds[dest].quantite,"colis")
             else:
                 demandes_non_assignees.append(dest)
                 
