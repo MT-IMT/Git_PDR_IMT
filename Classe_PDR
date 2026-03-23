@@ -233,7 +233,7 @@ class Camion:
         Met à jour la position du camion après un intervalle de temps dt.
         À appeler à chaque pas de simulation.
         """
-        if self.disponible or self.temps_restant_deplacement <= 0:
+        if self.disponible or self.temps_restant <= 0:
             return
 
         self.temps_restant -= dt
@@ -331,13 +331,18 @@ class Camion:
             chemin.append(noeud)
             noeud = precedent[noeud]
         chemin.reverse()
-        if chemin[0] == self.position:
+        if chemin and chemin[0] == self.position:
             self.route = chemin[1:]   # on exclut la position actuelle
             print(f"Camion {self.id} : chemin trouvé vers {destination} : {self.route}")
         else:
             print(f"Camion {self.id} : aucun chemin vers {destination}.")
             self.route = []
-        self.destination = self.route[-1]
+
+        if self.route:
+            self.destination = self.route[-1]
+        else:
+            self.destination = None
+
         return self.route
     
     def faire_un_tour(self, graphe):
@@ -498,13 +503,15 @@ if __name__ == "__main__":
                 camion_le_plus_proche = min(camions_libres, key=lambda c: distance_entre(g, c.position, dest))
                 if camion_le_plus_proche.charge_actuelle + g.noeuds[dest].quantite <= camion_le_plus_proche.capacite:
                     print(f"--> [DISPATCH] Assignation de la demande vers {dest} au {camion_le_plus_proche.id} (le plus proche)")
-                    camion_le_plus_proche.assigner_demande(g,dest)
+                    camion_le_plus_proche.assigner_demande(g, dest)
                     camion_le_plus_proche.id_livr_en_cours = g.noeuds[dest].id_carg
                     camion_le_plus_proche.demander(
                         g.noeuds[dest].id_carg,
                         g.noeuds[dest].quantite,
                         "colis"
                     )
+                else:
+                    demandes_non_assignees.append(dest)
             else:
                 demandes_non_assignees.append(dest)
                 
