@@ -173,32 +173,31 @@ class Camion:
         self.destination = None
         self.cible_actuelle = None
         self.id_livr_en_cours = 0
-        self.charge_actuelle = capacite            # charge courante
+        self.charge_actuelle = 0            # charge courante
         self.cargaison = {}                  # dictionnaire des marchandises, l'identifiant de la marchandise est associer à la marchandise (peut être une liste d'objets)
         self.route = []                       # liste d'identifiants de nœuds à suivre (itinéraire)
-        self.temps_restant_deplacement = 0.0      # temps avant d'arriver au prochain sommet
+        self.temps_restant = 0     # temps avant d'arriver au prochain sommet
 
     def demander(self, id_cargaison, poids_marchandise, marchandise):
-        """Charge une marchandise si la capacité le permet."""
-        self.cargaison[id_cargaison] = [poids_marchandise,marchandise]
-        print(f"Camion {self.id} : a reçu une demande de {poids_marchandise} kg. Charge restante = {self.charge_actuelle}")
+        """Enregistre et charge une demande si la capacité le permet."""
+        self.charger(id_cargaison, poids_marchandise, marchandise)
+        print(f"Camion {self.id} : a reçu une demande de {poids_marchandise} kg.")
 
     def charger(self, id_cargaison, poids_marchandise, marchandise):
         """Charge une marchandise si la capacité le permet."""
         if self.charge_actuelle + poids_marchandise > self.capacite:
             raise ValueError("Capacité insuffisante pour charger ce poids.")
         self.charge_actuelle += poids_marchandise
-        self.cargaison[id_cargaison] = [poids_marchandise,marchandise]
+        self.cargaison[id_cargaison] = [poids_marchandise, marchandise]
         print(f"Camion {self.id} : chargé {poids_marchandise} kg. Charge totale = {self.charge_actuelle}")
 
     def decharger(self, id_cargaison):
-        """Décharge une marchandise"""
-        if not self.cargaison:
-            raise ValueError("Aucune marchandise à décharger.")
-        # Retire le dernier élément pour l'exemple
-        dernier = self.cargaison.pop(id_cargaison)
-        self.charge_actuelle -= dernier[0]
-        print(f"Camion {self.id} : déchargé {dernier[0]} kg. Charge restante = {self.charge_actuelle}")
+        """Décharge une marchandise."""
+        if id_cargaison not in self.cargaison:
+            raise ValueError(f"Cargaison {id_cargaison} introuvable dans le camion.")
+        cargaison = self.cargaison.pop(id_cargaison)
+        self.charge_actuelle -= cargaison[0]
+        print(f"Camion {self.id} : déchargé {cargaison[0]} kg. Charge totale = {self.charge_actuelle}")
 
 
 #Section Expérimentale
@@ -227,7 +226,7 @@ class Camion:
             tuple_noeud_suiv = graphe.adjacence[noeud_act][i]
             if tuple_noeud_suiv[0] == id_pro_noeud:
                 temps = tuple_noeud_suiv[1].poids
-        self.temps_restant_deplacement = temps
+        self.temps_restant = temps
 
     def mettre_a_jour(self, dt: float, graphe):
         """
@@ -237,8 +236,8 @@ class Camion:
         if self.disponible or self.temps_restant_deplacement <= 0:
             return
 
-        self.temps_restant_deplacement -= dt
-        if self.temps_restant_deplacement <= 0:
+        self.temps_restant -= dt
+        if self.temps_restant <= 0:
             # Arrivée au sommet suivant
             prochain_idx = self.route[0]
             self.position = prochain_idx
@@ -252,21 +251,21 @@ class Camion:
                     tuple_noeud_suiv = graphe.adjacence[noeud_act][i]
                     if tuple_noeud_suiv[0] == id_pro_noeud:
                         temps = tuple_noeud_suiv[1].poids
-                self.temps_restant_deplacement = temps
+                self.temps_restant = temps
                 self._demarrer_deplacement(graphe)
             else:
                 # Tous les sommets de la route ont été visités
                 self._arriver_a_destination(graphe)
 
-    def _arriver_a_destination(self, graphe,id_cargaison=None):
+    def _arriver_a_destination(self, graphe, id_cargaison=None):
         """Action effectuée quand le camion atteint le dernier sommet de sa mission."""
-        # Traiter la demande (marquer comme effectuée, etc.)
         sommet_servi = graphe.noeuds[self.position]
         sommet_servi.requete_presente = False
         sommet_servi.statut = "servi"
         print(f"Camion {self.id} a servi le sommet {sommet_servi.nom}")
         self.disponible = True
-        self.decharger(id_cargaison)
+        if id_cargaison is not None and id_cargaison in self.cargaison:
+            self.decharger(id_cargaison)
 
         
 # Fin Section Expérimentale
@@ -384,8 +383,8 @@ class Camion:
                 self.position = self.cible_actuelle
                 self.cible_actuelle = None
                 print(f"[Tour] Camion {self.id} est ARRIVÉ au nœud {self.position}.")
-                if self.cible_actuelle == self.destination:
-                    self._arriver_a_destination(g,self.id_livr_en_cours)
+                if self.position == self.destination:
+                    self._arriver_a_destination(graphe,self.id_livr_en_cours)
                     
         # CAS 3 : Le camion est sur un nœud mais n'a nulle part où aller
         else:
@@ -471,9 +470,9 @@ if __name__ == "__main__":
 
     print("\n--- DÉBUT DE LA SIMULATION (MODE SURCHARGE) ---")
     tour_actuel = 1
-    
+
+    id_carg = 1
     while any(c.route or c.cible_actuelle is not None for c in flotte) or demandes_futures or demandes_en_attente:
-        id_carg = 1
         print(f"\n--- TOUR {tour_actuel} ---")
         
         # 1. APPARITION DES NOUVELLES DEMANDES
@@ -497,11 +496,15 @@ if __name__ == "__main__":
             
             if camions_libres:
                 camion_le_plus_proche = min(camions_libres, key=lambda c: distance_entre(g, c.position, dest))
-                if camion_le_plus_proche.charge_actuelle >= g.noeuds[dest].quantite :
+                if camion_le_plus_proche.charge_actuelle + g.noeuds[dest].quantite <= camion_le_plus_proche.capacite:
                     print(f"--> [DISPATCH] Assignation de la demande vers {dest} au {camion_le_plus_proche.id} (le plus proche)")
                     camion_le_plus_proche.assigner_demande(g,dest)
                     camion_le_plus_proche.id_livr_en_cours = g.noeuds[dest].id_carg
-                    camion_le_plus_proche.demander(g.noeuds[dest].id_carg, g.noeuds[dest].quantite,"colis")
+                    camion_le_plus_proche.demander(
+                        g.noeuds[dest].id_carg,
+                        g.noeuds[dest].quantite,
+                        "colis"
+                    )
             else:
                 demandes_non_assignees.append(dest)
                 
