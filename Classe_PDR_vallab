@@ -112,7 +112,6 @@ class Graphe:
                     "time_window": s.time_window,
                     "heure_apparition": s.heure_apparition
                 })
-
 # Fin Section Expérimentale
     def __repr__(self):
         return f"Graphe({self.oriente=}, {len(self.noeuds)} nœuds, {len(self.aretes)} arêtes)"
@@ -134,32 +133,31 @@ class Camion:
         self.destination = None
         self.cible_actuelle = None
         self.id_livr_en_cours = 0
-        self.charge_actuelle = capacite            # charge courante
+        self.charge_actuelle = 0            # charge courante
         self.cargaison = {}                  # dictionnaire des marchandises, l'identifiant de la marchandise est associer à la marchandise (peut être une liste d'objets)
         self.route = []                       # liste d'identifiants de nœuds à suivre (itinéraire)
-        self.temps_restant  = 0.0      # temps avant d'arriver au prochain sommet
+        self.temps_restant = 0     # temps avant d'arriver au prochain sommet
 
     def demander(self, id_cargaison, poids_marchandise, marchandise):
-        """Réserve une marchandise pour le client si la capacité le permet."""
-        self.cargaison[id_cargaison] = [poids_marchandise,marchandise]
-        print(f"Camion {self.id} : a reçu une demande de {poids_marchandise} kg. Charge restante = {self.charge_actuelle}")
+        """Enregistre et charge une demande si la capacité le permet."""
+        self.charger(id_cargaison, poids_marchandise, marchandise)
+        print(f"Camion {self.id} : a reçu une demande de {poids_marchandise} kg.")
 
-    def recharger(self):
+    def charger(self, id_cargaison, poids_marchandise, marchandise):
         """Charge une marchandise si la capacité le permet."""
-        if self.charge_actuelle  >= self.capacite:
-            raise ValueError("Camion déjà chargé")
-        poid_rajouter = self.capacite - self.charge_actuelle
-        self.charge_actuelle = self.capacite 
-        print(f"Camion {self.id} : chargé {poid_rajouter} kg. Charge totale = {self.charge_actuelle}")
+        if self.charge_actuelle + poids_marchandise > self.capacite:
+            raise ValueError("Capacité insuffisante pour charger ce poids.")
+        self.charge_actuelle += poids_marchandise
+        self.cargaison[id_cargaison] = [poids_marchandise, marchandise]
+        print(f"Camion {self.id} : chargé {poids_marchandise} kg. Charge totale = {self.charge_actuelle}")
 
     def decharger(self, id_cargaison):
-        """Décharge une marchandise"""
-        if not self.cargaison:
+        """Décharge une marchandise."""
+        if id_cargaison not in self.cargaison:
             raise ValueError(f"Cargaison {id_cargaison} introuvable dans le camion.")
-        # Retire le dernier élément pour l'exemple
-        dernier = self.cargaison.pop(id_cargaison)
-        self.charge_actuelle -= dernier[0]
-        print(f"Camion {self.id} : déchargé {dernier[0]} kg. Charge restante = {self.charge_actuelle}")
+        cargaison = self.cargaison.pop(id_cargaison)
+        self.charge_actuelle -= cargaison[0]
+        print(f"Camion {self.id} : déchargé {cargaison[0]} kg. Charge totale = {self.charge_actuelle}")
 
 
 #Section Expérimentale
@@ -188,18 +186,18 @@ class Camion:
             tuple_noeud_suiv = graphe.adjacence[noeud_act][i]
             if tuple_noeud_suiv[0] == id_pro_noeud:
                 temps = tuple_noeud_suiv[1].poids
-        self.temps_restant  = temps
+        self.temps_restant = temps
 
     def mettre_a_jour(self, dt: float, graphe):
         """
         Met à jour la position du camion après un intervalle de temps dt.
         À appeler à chaque pas de simulation.
         """
-        if self.disponible or self.temps_restant  <= 0:
+        if self.disponible or self.temps_restant <= 0:
             return
 
-        self.temps_restant  -= dt
-        if self.temps_restant  <= 0:
+        self.temps_restant -= dt
+        if self.temps_restant <= 0:
             # Arrivée au sommet suivant
             prochain_idx = self.route[0]
             self.position = prochain_idx
@@ -219,38 +217,33 @@ class Camion:
                 # Tous les sommets de la route ont été visités
                 self._arriver_a_destination(graphe)
 
-    def _arriver_a_destination(self, graphe,id_cargaison):
+    def _arriver_a_destination(self, graphe, id_cargaison=None):
         """Action effectuée quand le camion atteint le dernier sommet de sa mission."""
-        # Traiter la demande (marquer comme effectuée, etc.)
+        
+        
+        
+        
         sommet_servi = graphe.noeuds[self.position]
-        if sommet_servi != graphe.noeuds[0] :
+
+        # Vérification de la time window
+        if tour_actuel <= sommet_servi.time_window[1]:
             sommet_servi.requete_presente = False
             sommet_servi.statut = "servi"
-            print(f"Camion {self.id} a servi le sommet {sommet_servi.nom}")
-            self.disponible = True
-            self.decharger(id_cargaison)
-            self.verifier_camion_vide(graphe)
-        else :
-            self.disponible = True
-            if self.charge_actuelle != self.capacite :
-                self.recharger()
+            print(f"Camion {self.id} a servi le sommet {sommet_servi.nom} à temps")
+        else:
+            sommet_servi.statut = "en_retard"
+            print(f"Camion {self.id} est en retard pour le sommet {sommet_servi.nom}")
+
+        self.disponible = True
         
-
-    def verifier_camion_vide(self, graphe) :
-        en_capacite_livrer = False
-        nomb_dem = len(g.demandes)
-        for i in range(nomb_dem) :
-            id_noeud = g.demandes[i]
-            if self.charge_actuelle >= g.noeuds[id_noeud].quantite :
-                en_capacite_livrer = True
-        if not en_capacite_livrer :
-            self.assigner_demande(g,0)
-            self.trouver_chemin_vers(0, g)
-            self.recharger()
-
+        
+        
+        if id_cargaison is not None and id_cargaison in self.cargaison:
+            self.decharger(id_cargaison)
 
         
 # Fin Section Expérimentale
+
 
     def definir_itineraire(self, chemin):
         """Définit la liste des nœuds à parcourir (séquence d'identifiants)."""
@@ -312,19 +305,21 @@ class Camion:
             chemin.append(noeud)
             noeud = precedent[noeud]
         chemin.reverse()
-        if chemin[0] == self.position:
+        if chemin and chemin[0] == self.position:
             self.route = chemin[1:]   # on exclut la position actuelle
             print(f"Camion {self.id} : chemin trouvé vers {destination} : {self.route}")
         else:
             print(f"Camion {self.id} : aucun chemin vers {destination}.")
             self.route = []
+
         if self.route:
             self.destination = self.route[-1]
         else:
             self.destination = None
+
         return self.route
     
-    def faire_un_tour(self, graphe):
+    def faire_un_tour(self, graphe, tour_actuel):
         """
         Exécute un tour de simulation pour le camion.
         Gère le transit sur les arêtes en fonction de leur poids.
@@ -338,7 +333,7 @@ class Camion:
                 self.cible_actuelle = None
                 print(f"[Tour] Camion {self.id} est ARRIVÉ au nœud {self.position}.")
                 if self.position == self.destination:
-                    self._arriver_a_destination(g,self.id_livr_en_cours)
+                    self._arriver_a_destination(graphe,self.id_livr_en_cours)
             else:
                 print(f"[Tour] Camion {self.id} est en route vers {self.cible_actuelle} (reste {self.temps_restant} tours).")
             return
@@ -368,7 +363,7 @@ class Camion:
                 self.cible_actuelle = None
                 print(f"[Tour] Camion {self.id} est ARRIVÉ au nœud {self.position}.")
                 if self.position == self.destination:
-                    self._arriver_a_destination(g,self.id_livr_en_cours)
+                    self._arriver_a_destination(graphe,self.id_livr_en_cours)
                     
         # CAS 3 : Le camion est sur un nœud mais n'a nulle part où aller
         else:
@@ -402,7 +397,7 @@ def distance_entre(graphe, depart, arrivee):
     return float('inf') # Si aucun chemin n'est trouvé
 
 # Exemple d'utilisiation de nos classes
-def graphe_exemple():
+if __name__ == "__main__":
     # --- 1. CRÉATION DU GRAPHE (Grande ville en grille 4x4) ---
     g = Graphe(oriente=False)
     
@@ -442,6 +437,8 @@ def graphe_exemple():
     flotte = [camion1,camion2]
 
     # --- 3. GESTION DYNAMIQUE DES DEMANDES (Avalanche de requêtes) ---
+    
+    
     demandes_futures = {
         2:  [(2, 3, (2, 8)),  (15, 8, (2, 8))], #(id_du_noeud_client,qte_demander)  # Tour 2 : Les deux extrémités
         5:  [(3, 2, (5, 11)), (12, 2, (5, 11)), (7, 2, (5, 11))], # Tour 5 : 3 requêtes d'un coup
@@ -449,60 +446,67 @@ def graphe_exemple():
         15: [(4, 2, (15, 21)), (9, 2, (15, 21)), (6, 2, (15, 21)), (8, 2, (15, 21))], # Tour 15 : Encore 4 requêtes
         20: [(5, 2, (20, 26)), (10, 2, (20, 26))] # Tour 20 : Retour au centre
     }
-
-    return g, flotte, demandes_futures
-
-
-if __name__ == "__main__" :
-    g, flotte, demandes_futures = graphe_exemple()
+    
+    demandes_en_attente = []
 
     print("\n--- DÉBUT DE LA SIMULATION (MODE SURCHARGE) ---")
     tour_actuel = 1
-    
-    while any(c.route or c.cible_actuelle is not None for c in flotte) or demandes_futures or g.demandes:
-        id_carg = 1
+
+    id_carg = 1
+    while any(c.route or c.cible_actuelle is not None for c in flotte) or demandes_futures or demandes_en_attente:
         print(f"\n--- TOUR {tour_actuel} ---")
         
         # 1. APPARITION DES NOUVELLES DEMANDES
         if tour_actuel in demandes_futures:
             nouvelles_destinations = demandes_futures.pop(tour_actuel)
             print(f">>> [ALERTE] Nouvelles demandes apparues pour les destinations : {nouvelles_destinations} ! <<<")
+            
+                
             for demande in nouvelles_destinations:
                 noeud_demand = demande[0]
                 quantite = demande[1]
                 fenetre = demande[2]
-                g.demandes.append(noeud_demand)
+
+                demandes_en_attente.append(noeud_demand)
                 g.noeuds[noeud_demand].requete_presente = True
                 g.noeuds[noeud_demand].quantite = quantite
                 g.noeuds[noeud_demand].time_window = fenetre
                 g.noeuds[noeud_demand].statut = "en_attente"
                 g.noeuds[noeud_demand].id_carg = id_carg
-                id_carg = id_carg + 1
+
+                id_carg += 1
 
 
         # 2. DISPATCHER INTELLIGENT
-        for dest in g.demandes:
+        demandes_non_assignees = []
+        for dest in demandes_en_attente:
             camions_libres = [c for c in flotte if not c.route and c.cible_actuelle is None]
+            
             if camions_libres:
                 camion_le_plus_proche = min(camions_libres, key=lambda c: distance_entre(g, c.position, dest))
-                if camion_le_plus_proche.charge_actuelle >= g.noeuds[dest].quantite :
+                if camion_le_plus_proche.charge_actuelle + g.noeuds[dest].quantite <= camion_le_plus_proche.capacite:
                     print(f"--> [DISPATCH] Assignation de la demande vers {dest} au {camion_le_plus_proche.id} (le plus proche)")
-                    camion_le_plus_proche.assigner_demande(g,dest)
+                    camion_le_plus_proche.assigner_demande(g, dest)
                     camion_le_plus_proche.id_livr_en_cours = g.noeuds[dest].id_carg
-                    camion_le_plus_proche.trouver_chemin_vers(dest, g)
-                    camion_le_plus_proche.demander(g.noeuds[dest].id_carg, g.noeuds[dest].quantite,"colis")
-                    g.demandes.remove(dest)
-                else :
-                    camions_libres.remove(camion_le_plus_proche)
+                    camion_le_plus_proche.demander(
+                        g.noeuds[dest].id_carg,
+                        g.noeuds[dest].quantite,
+                        "colis"
+                    )
+                else:
+                    demandes_non_assignees.append(dest)
+            else:
+                demandes_non_assignees.append(dest)
                 
         # Affichage critique : La file d'attente s'allonge !
-        if len(g.demandes) != 0:
-            print(f"!!! [SURCHARGE] {len(g.demandes)} requêtes en attente : {g.demandes} !!!")
+        if demandes_non_assignees:
+            print(f"!!! [SURCHARGE] {len(demandes_non_assignees)} requêtes en attente : {demandes_non_assignees} !!!")
                 
+        demandes_en_attente = demandes_non_assignees
 
         # 3. FAIRE AVANCER LES CAMIONS
         for camion in flotte:
-            camion.faire_un_tour(g)
+            camion.faire_un_tour(g, tour_actuel)
             
         tour_actuel += 1
         
