@@ -112,46 +112,6 @@ class Graphe:
                     "time_window": s.time_window,
                     "heure_apparition": s.heure_apparition
                 })
-
-    def dijkstra(self, depart_idx: int, arrivee_idx: int) -> tuple[list[int], float]:
-        """
-        Calcule le plus court chemin entre deux sommets.
-        Retourne (liste des indices des sommets à parcourir, temps total).
-        """
-        n = len(self.noeuds)
-        distances = [float('inf')] * n
-        distances[depart_idx] = 0
-        precedent = [-1] * n
-        pq = [(0, depart_idx)]  # (distance cumulée, sommet)
-        from heapq import heappush, heappop
-
-        while pq:
-            dist_courante, u = heappop(pq)
-            if dist_courante > distances[u]:
-                continue
-            if u == arrivee_idx:
-                break
-            liste_tuple_noeud_u = self.adjacence[u] #les id sont des nombres 0,1,2 etc
-            for v in range(n):
-                temps = 0
-                for i in range(len(liste_tuple_noeud_u)) :
-                    if liste_tuple_noeud_u[i][0] == v :
-                        temps = liste_tuple_noeud_u[i][1].poids #les id sont des nombres 0,1,2 etc
-                if temps > 0:  # s'il y a une arête
-                    nouvelle_dist = dist_courante + temps
-                    if nouvelle_dist < distances[v]:
-                        distances[v] = nouvelle_dist
-                        precedent[v] = u
-                        heappush(pq, (nouvelle_dist, v))
-
-        # Reconstruction du chemin
-        chemin = []
-        idx = arrivee_idx
-        while idx != -1:
-            chemin.append(idx)
-            idx = precedent[idx]
-        chemin.reverse()
-        return chemin, distances[arrivee_idx]
 # Fin Section Expérimentale
     def __repr__(self):
         return f"Graphe({self.oriente=}, {len(self.noeuds)} nœuds, {len(self.aretes)} arêtes)"
