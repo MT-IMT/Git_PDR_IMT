@@ -213,7 +213,7 @@ class Camion:
                     tuple_noeud_suiv = graphe.adjacence[noeud_act][i]
                     if tuple_noeud_suiv[0] == id_pro_noeud:
                         temps = tuple_noeud_suiv[1].poids
-                self.temps_restant_deplacement = temps
+                self.temps_restant = temps
                 self._demarrer_deplacement(graphe)
             else:
                 # Tous les sommets de la route ont été visités
