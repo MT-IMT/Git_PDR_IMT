@@ -402,7 +402,7 @@ def distance_entre(graphe, depart, arrivee):
     return float('inf') # Si aucun chemin n'est trouvé
 
 # Exemple d'utilisiation de nos classes
-if __name__ == "__main__":
+def graphe_exemple():
     # --- 1. CRÉATION DU GRAPHE (Grande ville en grille 4x4) ---
     g = Graphe(oriente=False)
     
@@ -449,6 +449,12 @@ if __name__ == "__main__":
         15: [(4, 2, (15, 21)), (9, 2, (15, 21)), (6, 2, (15, 21)), (8, 2, (15, 21))], # Tour 15 : Encore 4 requêtes
         20: [(5, 2, (20, 26)), (10, 2, (20, 26))] # Tour 20 : Retour au centre
     }
+
+    return g, flotte, demandes_futures
+
+
+if __name__ == "__main__" :
+    g, flotte, demandes_futures = graphe_exemple()
 
     print("\n--- DÉBUT DE LA SIMULATION (MODE SURCHARGE) ---")
     tour_actuel = 1
