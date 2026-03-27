@@ -140,17 +140,17 @@ class Camion:
         self.temps_restant  = 0.0      # temps avant d'arriver au prochain sommet
 
     def demander(self, id_cargaison, poids_marchandise, marchandise):
-        """Charge une marchandise si la capacité le permet."""
+        """Réserve une marchandise pour le client si la capacité le permet."""
         self.cargaison[id_cargaison] = [poids_marchandise,marchandise]
         print(f"Camion {self.id} : a reçu une demande de {poids_marchandise} kg. Charge restante = {self.charge_actuelle}")
 
-    def charger(self, id_cargaison, poids_marchandise, marchandise):
+    def recharger(self):
         """Charge une marchandise si la capacité le permet."""
-        if self.charge_actuelle + poids_marchandise > self.capacite:
-            raise ValueError("Capacité insuffisante pour charger ce poids.")
-        self.charge_actuelle += poids_marchandise
-        self.cargaison[id_cargaison] = [poids_marchandise,marchandise]
-        print(f"Camion {self.id} : chargé {poids_marchandise} kg. Charge totale = {self.charge_actuelle}")
+        if self.charge_actuelle  >= self.capacite:
+            raise ValueError("Camion déjà chargé")
+        poid_rajouter = self.capacite - self.charge_actuelle
+        self.charge_actuelle = self.capacite 
+        print(f"Camion {self.id} : chargé {poid_rajouter} kg. Charge totale = {self.charge_actuelle}")
 
     def decharger(self, id_cargaison):
         """Décharge une marchandise"""
@@ -232,6 +232,8 @@ class Camion:
             self.verifier_camion_vide(graphe)
         else :
             self.disponible = True
+            if self.charge_actuelle != self.capacite :
+                self.recharger()
         
 
     def verifier_camion_vide(self, graphe) :
@@ -244,7 +246,7 @@ class Camion:
         if not en_capacite_livrer :
             self.assigner_demande(g,0)
             self.trouver_chemin_vers(0, g)
-            self.charge_actuelle = self.capacite
+            self.recharger()
 
 
         
