@@ -5,7 +5,7 @@ def simulation_centralise(g, flotte, demandes_futures, depot=0):
     """
     demandes_en_attente = []
     print("\n=======================================================")
-    print("--- DÉBUT DE LA SIMULATION (MOTEUR OPTIMISÉ PDR) ---")
+    print("--- DÉBUT DE LA SIMULATION CENTRALISE ---")
     print("=======================================================")
     
     tour_actuel = 1
@@ -88,7 +88,7 @@ def simulation_centralise(g, flotte, demandes_futures, depot=0):
         demandes_en_attente = demandes_non_assignees
 
         # =====================================================================
-        # -> TABLEAU DE BORD DE LA FLOTTE
+        # TABLEAU DE BORD DE LA FLOTTE
         # =====================================================================
         print("\n--- ETAT DES CAMIONS ---")
         for c in flotte:
@@ -116,7 +116,7 @@ def simulation_centralise(g, flotte, demandes_futures, depot=0):
 
 
 # =========================================================================
-# POINT D'ENTRÉE DU PROGRAMME
+# MAIN
 # =========================================================================
 if __name__ == "__main__" :
     # 1. On charge la carte, les camions et les commandes
