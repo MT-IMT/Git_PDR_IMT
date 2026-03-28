@@ -460,6 +460,24 @@ class Camion:
                 meilleur_index = i # Cet 'i' correspond exactement à l'index d'insertion dans file_destinations
                 
         return meilleur_index, meilleur_surcout
+
+
+    def passer_a_la_prochaine_destination(self, graphe):
+        """Prend la prochaine destination dans la file et calcule la route."""
+        if not self.file_destinations:
+            # Plus aucune livraison prévue
+            self.disponible = True
+            self.destination = None
+            print(f"Camion {self.id} a terminé sa tournée. En attente au nœud {self.position}.")
+            return
+        
+        # On extrait la prochaine cible
+        prochaine_dest = self.file_destinations.pop(0)
+        self.disponible = False
+        self.route = self.trouver_chemin_vers(prochaine_dest, graphe)
+        graphe.noeuds[prochaine_dest].statut = "en_cours_de_livraison"
+        self._demarrer_deplacement(graphe)
+
     def __repr__(self):
         return f"Camion({self.id}, capacité={self.capacite}, position={self.position})"
 
