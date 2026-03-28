@@ -106,12 +106,8 @@ class Camion:
         self.temps_restant  = 0.0      # temps avant d'arriver au prochain sommet
         self.boite_reception = []
         
-        # --- AJOUT DE TES VARIABLES AVANCÉES SANS SUPPRIMER LES AUTRES ---
+        
         self.file_destinations = []
-
-    # =========================================================================
-    # PARTIE 1 : LE CODE ORIGINAL DE TES AMIS (INTOUCHÉ)
-    # =========================================================================
 
     def demander(self, id_cargaison, poids_marchandise, marchandise):
         self.cargaison[id_cargaison] = [poids_marchandise,marchandise]
@@ -325,9 +321,7 @@ class Camion:
         return f"Camion({self.id}, capacité={self.capacite}, position={self.position})"
 
 
-    # =========================================================================
-    # PARTIE 2 : TES FONCTIONS AVANCÉES (HEURISTIQUE D'INSERTION ET MULTI-ARRÊTS)
-    # =========================================================================
+   
 
     def assigner_demande_optimisee(self, graphe, destination, index_insertion=None):
         """Assigne une nouvelle demande en l'insérant au meilleur endroit de la file."""
