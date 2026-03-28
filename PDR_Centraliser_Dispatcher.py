@@ -119,13 +119,6 @@ def simulation_centralise(g, flotte, demandes_futures, depot=0):
 # MAIN
 # =========================================================================
 if __name__ == "__main__" :
-    # 1. On charge la carte, les camions et les commandes
+    # choisir le graphe
     g, flotte, demandes_futures = graphe_exemple()
-
-    # 2. CHOISIS TA SIMULATION ICI :
-    
-    # Pour lancer la version basique de tes amis (décommente la boucle complète qu'ils avaient faite)
-    # --- Code de tes amis ici ---
-    
-    # Pour lancer TA version optimisée
     simulation_centralise(g, flotte, demandes_futures, depot=0)
