@@ -425,6 +425,41 @@ class Camion:
         else:
             print(f"[Tour] Camion {self.id} est en attente au nœud {self.position}.")
 
+    def evaluer_meilleure_insertion(self, graphe, nouvelle_dest):
+        """
+        Teste l'insertion de la nouvelle destination à chaque position possible de la tournée.
+        Retourne un tuple : (meilleur_index_insertion, cout_supplementaire)
+        """
+        # Le point de départ de l'évaluation : là où le camion se dirige actuellement, ou sa position s'il est à l'arrêt
+        ancre = self.destination if self.destination is not None else self.position
+        if ancre is None:
+            return 0, float('inf') # Ne devrait pas arriver
+            
+        # La séquence logique des nœuds que le camion va visiter
+        sequence = [ancre] + self.file_destinations
+        
+        meilleur_surcout = float('inf')
+        meilleur_index = 0
+        
+        for i in range(len(sequence)):
+            noeud_prec = sequence[i]
+            
+            # Si on insère AU MILIEU de la tournée existante
+            if i < len(sequence) - 1:
+                noeud_suiv = sequence[i+1]
+                cout_avec_detour = distance_entre(graphe, noeud_prec, nouvelle_dest) + distance_entre(graphe, nouvelle_dest, noeud_suiv)
+                cout_trajet_initial = distance_entre(graphe, noeud_prec, noeud_suiv)
+                surcout = cout_avec_detour - cout_trajet_initial
+            
+            # Si on insère À LA FIN de la tournée
+            else:
+                surcout = distance_entre(graphe, noeud_prec, nouvelle_dest)
+                
+            if surcout < meilleur_surcout:
+                meilleur_surcout = surcout
+                meilleur_index = i # Cet 'i' correspond exactement à l'index d'insertion dans file_destinations
+                
+        return meilleur_index, meilleur_surcout
     def __repr__(self):
         return f"Camion({self.id}, capacité={self.capacite}, position={self.position})"
 
