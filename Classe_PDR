@@ -138,6 +138,7 @@ class Camion:
         self.cargaison = {}                  # dictionnaire des marchandises, l'identifiant de la marchandise est associer à la marchandise (peut être une liste d'objets)
         self.route = []                       # liste d'identifiants de nœuds à suivre (itinéraire)
         self.temps_restant  = 0.0      # temps avant d'arriver au prochain sommet
+        self.boite_reception = []
 
     def demander(self, id_cargaison, poids_marchandise, marchandise):
         """Réserve une marchandise pour le client si la capacité le permet."""
@@ -219,16 +220,17 @@ class Camion:
                 # Tous les sommets de la route ont été visités
                 self._arriver_a_destination(graphe)
 
-    def _arriver_a_destination(self, graphe,id_cargaison):
+    def _arriver_a_destination(self, graphe,id_cargaison = None):
         """Action effectuée quand le camion atteint le dernier sommet de sa mission."""
         # Traiter la demande (marquer comme effectuée, etc.)
         sommet_servi = graphe.noeuds[self.position]
-        if sommet_servi != graphe.noeuds[0] :
+        if sommet_servi.id != 0 :
             sommet_servi.requete_presente = False
             sommet_servi.statut = "servi"
             print(f"Camion {self.id} a servi le sommet {sommet_servi.nom}")
             self.disponible = True
-            self.decharger(id_cargaison)
+            if id_cargaison:
+                self.decharger(id_cargaison)
             self.verifier_camion_vide(graphe)
         else :
             self.disponible = True
@@ -238,17 +240,66 @@ class Camion:
 
     def verifier_camion_vide(self, graphe) :
         en_capacite_livrer = False
-        nomb_dem = len(g.demandes)
+        nomb_dem = len(graphe.demandes)
         for i in range(nomb_dem) :
-            id_noeud = g.demandes[i]
-            if self.charge_actuelle >= g.noeuds[id_noeud].quantite :
+            id_noeud = graphe.demandes[i]
+            if self.charge_actuelle >= graphe.noeuds[id_noeud].quantite :
                 en_capacite_livrer = True
         if not en_capacite_livrer :
-            self.assigner_demande(g,0)
-            self.trouver_chemin_vers(0, g)
+            self.assigner_demande(graphe,0)
+            self.trouver_chemin_vers(0, graphe)
             self.recharger()
+        
+    def recevoir_message(self, message):
+        if not hasattr(self, 'messages_recus'):
+            self.messages_recus = []
+        self.boite_reception.append(message)
 
+    def traiter_messages(self, graphe, tour_actuel):
+        reponses = []
 
+        if not hasattr(self, 'messages_recus'):
+            self.messages_recus = []
+
+        for message in self.boite_reception:
+
+            if message.type == "demande":
+                demande_id = message.contenu
+
+                cout = self.calcul_surcout(self, graphe, demande_id, tour_actuel)
+
+                reponses.append({
+                    "type": "offre",
+                    "demande": demande_id,
+                    "camion": self,
+                    "cout": cout
+                })
+
+        self.boite_reception.clear()
+        return reponses
+
+    def calcul_surcout(self,camion, graphe, destination, tour_actuel):
+        """
+        Calcule le surcoût d'envoyer un camion vers une demande.
+        - temps de trajet = somme des poids des arêtes
+        - pénalisation si arrivée après la fin de la time_window
+        """
+        # Temps nécessaire pour atteindre la destination
+        temps_trajet = distance_entre(graphe, camion.position, destination)
+        if temps_trajet == float("inf"):
+            return float("inf")  # pas de chemin
+
+        sommet = graphe.noeuds[destination]
+
+        # Pénalisation si le camion arriverait après la fin de la fenêtre
+        penalite_temps = 0
+        if tour_actuel + temps_trajet > sommet.time_window[1]:
+            penalite_temps = (tour_actuel + temps_trajet - sommet.time_window[1]) * 10
+
+        # Surcoût = temps de trajet + pénalité
+        surcout = temps_trajet + penalite_temps
+
+        return surcout
         
 # Fin Section Expérimentale
 
@@ -338,7 +389,7 @@ class Camion:
                 self.cible_actuelle = None
                 print(f"[Tour] Camion {self.id} est ARRIVÉ au nœud {self.position}.")
                 if self.position == self.destination:
-                    self._arriver_a_destination(g,self.id_livr_en_cours)
+                    self._arriver_a_destination(graphe,self.id_livr_en_cours)
             else:
                 print(f"[Tour] Camion {self.id} est en route vers {self.cible_actuelle} (reste {self.temps_restant} tours).")
             return
