@@ -108,6 +108,7 @@ class Camion:
         
         
         self.file_destinations = []
+        self.noeud_depot = position_depart
 
     def demander(self, id_cargaison, poids_marchandise, marchandise):
         self.cargaison[id_cargaison] = [poids_marchandise,marchandise]
@@ -382,7 +383,7 @@ class Camion:
 
     def _arriver_a_destination_optimisee(self, graphe):
         """Action effectuée quand le camion atteint un sommet de sa file d'attente (Version Avancée)."""
-        if self.position == 15: # Gestion du Dépôt 
+        if self.position == self.noeud_depot : # Gestion du Dépôt 
             self.charge_actuelle = self.capacite
             print(f"+++ [DÉPÔT] Camion {self.id} a refait le plein ! (Stock: {self.charge_actuelle}/{self.capacite}) +++")
             if not graphe.noeuds[self.position].requete_presente:
