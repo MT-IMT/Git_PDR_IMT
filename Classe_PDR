@@ -139,6 +139,7 @@ class Camion:
         self.route = []                       # liste d'identifiants de nœuds à suivre (itinéraire)
         self.temps_restant  = 0.0      # temps avant d'arriver au prochain sommet
         self.boite_reception = []
+        self.file_destinations = []
 
     def demander(self, id_cargaison, poids_marchandise, marchandise):
         """Réserve une marchandise pour le client si la capacité le permet."""
