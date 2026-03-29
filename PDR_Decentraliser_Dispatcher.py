@@ -77,9 +77,9 @@ def attribuer(offres, graphe):
 
         # Ne garder que les camions disponibles et non déjà affectés
         liste_offres = [
-            o for o in liste_offres
-            if o["camion"].disponible and o["camion"] not in camions_utilises
-        ]
+                        o for o in liste_offres
+                        if o["cout"] != float("inf")
+                        ]
 
         if not liste_offres:
             continue  # pas de camion libre pour cette demande
@@ -113,7 +113,8 @@ def camions_disponibles(camions):
 
 # Exemple d'utilisiation de nos classes
 if __name__ == "__main__":
-    g, flotte, demandes_futures = Classe_PDR.graphe_exemple()
+    #g, flotte, demandes_futures = Classe_PDR.graphe_exemple()
+    g, flotte, demandes_futures = Classe_PDR.graphe_complexe()
 
     print("\n--- DÉBUT DE LA SIMULATION (MODE SURCHARGE) ---")
     tour_actuel = 1
