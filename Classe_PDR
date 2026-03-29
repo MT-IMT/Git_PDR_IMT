@@ -221,7 +221,7 @@ class Camion:
                 # Tous les sommets de la route ont été visités
                 self._arriver_a_destination(graphe)
 
-    def _arriver_a_destination(self, graphe,centraliser):
+    def _arriver_a_destination(self, graphe):
         """Action effectuée quand le camion atteint le dernier sommet de sa mission."""
         # Traiter la demande (marquer comme effectuée, etc.)
         sommet_servi = graphe.noeuds[self.position]
@@ -236,11 +236,6 @@ class Camion:
             self.disponible = True
             if self.charge_actuelle != self.capacite :
                 self.recharger()
-                if not graphe.noeuds[self.position].requete_presente and centraliser:
-                    self.passer_a_la_prochaine_destination(graphe)
-                    return
-        if centraliser :
-            self.passer_a_la_prochaine_destination(graphe)
         
 
     def verifier_camion_vide(self, graphe) :
@@ -306,7 +301,7 @@ class Camion:
 
         return surcout
     
-    def insertion_demande_optimisee(self, graphe, destination, index_insertion=None):
+    def insertion_demande_centralisee(self, graphe, destination, index_insertion=None):
         """Assigne une nouvelle demande en l'insérant au meilleur endroit de la file."""
         if index_insertion is None or index_insertion >= len(self.file_destinations):
             self.file_destinations.append(destination)
@@ -363,6 +358,60 @@ class Camion:
         graphe.noeuds[prochaine_dest].statut = "en_cours_de_livraison"
         self._demarrer_deplacement(graphe)
 
+    def _arriver_a_destination_centraliser(self, graphe):
+        """Action effectuée quand le camion atteint un sommet de sa file d'attente (Version Avancée)."""
+        if self.position == self.noeud_depot : # Gestion du Dépôt 
+            self.charge_actuelle = self.capacite
+            print(f"+++ [DÉPÔT] Camion {self.id} a refait le plein ! (Stock: {self.charge_actuelle}/{self.capacite}) +++")
+            if not graphe.noeuds[self.position].requete_presente:
+                self.passer_a_la_prochaine_destination(graphe)
+                return
+
+        sommet_servi = graphe.noeuds[self.position]
+        
+        if sommet_servi.requete_presente:
+            sommet_servi.requete_presente = False
+            sommet_servi.statut = "servi"
+            self.charge_actuelle -= sommet_servi.quantite
+            print(f" Camion {self.id} a livré {sommet_servi.nom}. Stock restant : {self.charge_actuelle}/{self.capacite} kg")
+
+        self.passer_a_la_prochaine_destination(graphe)
+
+    def faire_un_tour_centraliser(self, graphe):
+        """Moteur de déplacement alternatif pour gérer le multi-arrêts (Version Avancée)."""
+        if self.cible_actuelle is not None:
+            self.temps_restant -= 1
+            if self.temps_restant <= 0:
+                self.position = self.cible_actuelle
+                self.cible_actuelle = None
+                print(f"[Tour] Camion {self.id} est ARRIVÉ au nœud {self.position}.")
+                if self.position == self.destination:
+                    self._arriver_a_destination_centraliser(graphe)
+            else:
+                print(f"[Tour] Camion {self.id} est en route vers {self.cible_actuelle} (reste {self.temps_restant} tours).")
+            return
+
+        if self.route:
+            prochain_noeud = self.route.pop(0)
+            poids = graphe.poids_arete(self.position, prochain_noeud)
+
+            if poids is None:
+                self.route = []
+                return
+
+            self.cible_actuelle = prochain_noeud
+            self.temps_restant = poids - 1 
+            print(f"[Tour] Camion {self.id} QUITTE le nœud {self.position} en direction de {self.cible_actuelle}. (Distance totale : {poids})")
+            self.position = None 
+            
+            if self.temps_restant <= 0:
+                self.position = self.cible_actuelle
+                self.cible_actuelle = None
+                print(f"[Tour] Camion {self.id} est ARRIVÉ au nœud {self.position}.")
+                if self.position == self.destination:
+                    self._arriver_a_destination_centraliser(graphe)
+        else:
+            print(f"[Tour] Camion {self.id} est en attente au nœud {self.position}.")
 
 # Fin Section Expérimentale
 
@@ -438,7 +487,7 @@ class Camion:
             self.destination = None
         return self.route
     
-    def faire_un_tour(self, graphe, centraliser):
+    def faire_un_tour(self, graphe):
         """
         Exécute un tour de simulation pour le camion.
         Gère le transit sur les arêtes en fonction de leur poids.
@@ -452,7 +501,7 @@ class Camion:
                 self.cible_actuelle = None
                 print(f"[Tour] Camion {self.id} est ARRIVÉ au nœud {self.position}.")
                 if self.position == self.destination:
-                    self._arriver_a_destination(graphe,centraliser)
+                    self._arriver_a_destination(graphe)
             else:
                 print(f"[Tour] Camion {self.id} est en route vers {self.cible_actuelle} (reste {self.temps_restant} tours).")
             return
