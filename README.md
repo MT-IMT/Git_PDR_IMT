@@ -11,18 +11,19 @@ Chaque nœud a notamment :
 
 - id : identifiant unique
 - nom : nom du lieu
-- x, y : coordonnées
+- x, y : coordonnées spatiales
 - time_window : plage horaire d’ouverture/fermeture
-- requete_presente : indique s’il y a une demande active
-- quantite : quantité demandée
+- requete_presente : indique s’il y a une demande active (booleen)
+- quantite : quantité demandée par le client
 - id_carg : identifiant de cargaison
 - statut : "en_attente", "servi", "en_cours_livraison"
-- heure_apparition : moment où la demande apparaît
+- heure_apparition : moment(tour) où la demande apparaît
 
 # 2. La classe Arete relie :
 - un nœud source
 - un nœud cible
-- un poids
+
+De plus, chaque arête possède un poids, ce poids va correspondre au nombre de tours pour parcourir l'arête, si l'arête a un poids de 3, le camion va mettre 3 tours pour la parcourir.
 
 # 3. Graphe : la carte routière
 La classe Graphe stocke tout le réseau.
@@ -42,70 +43,47 @@ Si le graphe n’est pas orienté (oriente=False), il ajoute aussi la route inve
 - construire_demandes() : Construit une liste des demandes à partir des nœuds où requete_presente == True.
 - dijkstra(depart_idx, arrivee_idx) : Implémente un calcul de plus court chemin.
 
-# 4. Camion : le véhicule de livraison
+# 4. Camion
+Représente un véhicule de livraison autonome se déplaçant sur le graphe.
+Attributs :
 
-La classe Camion représente un camion qui se déplace sur le graphe.
-Attributs importants :
+    État général : id, capacite, disponible, charge_actuelle, cargaison.
 
-- id
-- capacite
-- disponible
-- position
-- destination
-- route
-- temps_restant_deplacement
-- cible_actuelle
-- charge_actuelle
-- cargaison
-- file_destinations  
-- noeud_depot 
+    Déplacement : position, destination, cible_actuelle, route, temps_restant.
 
-# 5. Gestion du chargement
-- demander(...) : 
-Ajoute une cargaison au dictionnaire cargaison, sans modifier réellement la charge.
-Ça ressemble plus à un enregistrement de demande qu’à un vrai chargement.
-- charger(...) : 
-Ajoute une marchandise si la capacité le permet.
-- decharger(...) :
-Retire une marchandise du camion.
+    Attributs avancés (Optimisation) : file_destinations (pour gérer les arrêts multiples) et noeud_depot (pour le retour automatique).
 
-# 6. Calcul d’itinéraire
-trouver_chemin_vers(destination, graphe) :
-C’est un Dijkstra classique part de la position actuelle du camion
-calcule la plus courte route jusqu’à destination
-reconstruit le chemin
-stocke le résultat dans self.route
+Fonctions de base de la classe Camion :
 
-# 7. Déplacement du camion
+    demander(...) / recharger() / decharger(...) : Gestion du stock physique du camion.
 
-Il y a en réalité deux logiques de déplacement dans le code.
+    trouver_chemin_vers(...) : Appelle Dijkstra pour calculer la route jusqu'à l'objectif.
 
-# A. Logique “temps continu”
+    _demarrer_deplacement(...) / mettre_a_jour(...) / avancer(...) : Logique de déplacement abstrait/continu.
 
-Avec :
-- assigner_demande
-- _demarrer_deplacement
-- mettre_a_jour
-- _arriver_a_destination
+    assigner_demande(...) / faire_un_tour(...) / _arriver_a_destination(...) : Moteur de déplacement "Tour par Tour" classique (un arrêt à la fois).
 
-Ici l’idée est :
-on assigne une destination
-on calcule une route
-on enlève dt à un temps restant
-quand le temps arrive à 0, le camion passe au sommet suivant
+    recevoir_message(...) / traiter_messages(...) : Ancien système de communication entre agents.
 
-# B. Logique “tour par tour”
-Avec :
-- faire_un_tour
-Ici le déplacement se fait à chaque tour de simulation :
-- soit le camion est déjà en transit
-- soit il part vers le prochain nœud
-- soit il attend
+Fonctions avancées (Optimisation & Multi-arrêts) :
 
-# 8. distance_entre(...)
+    evaluer_meilleure_insertion(graphe, nouvelle_dest) : Cœur mathématique de l'optimisation. Teste l'insertion d'un nouveau client entre chaque arrêt prévu dans la file d'attente pour trouver la position générant le surcoût kilométrique le plus faible.
 
-Fonction utilitaire qui calcule la distance la plus courte entre deux nœuds sans modifier les camions.
-Elle sert dans le dispatch pour choisir le camion libre le plus proche d’une demande.
+    assigner_demande_optimisee(...) : Insère la demande à l'index optimal calculé.
+
+    passer_a_la_prochaine_destination(...) : Permet au camion d'enchaîner directement avec le prochain client de sa file sans s'arrêter.
+
+    faire_un_tour_optimise(...) : Moteur de déplacement de la simulation avancée.
+
+    _arriver_a_destination_optimisee(...) : Gère le déchargement physique, le rechargement automatique si le nœud actuel est le dépôt, puis l'enchaînement avec la mission suivante.
+
+# 5. Utilitaire et Environnement
+
+    distance_entre(graphe, depart, arrivee) : Calcule la distance entre deux nœuds sans modifier l'état des camions (utilisé par le Dispatcher).
+
+    graphe_exemple() : Génère une petite ville de test (4x4, 16 nœuds, 2 camions).
+
+    graphe_complexe() : Génère un environnement massif pour les "Stress Tests" (6x6, 36 nœuds, trafic hétérogène, 3 camions haute capacité).
 
 # 9. Ce que fait le main
 Étape 1 : création du graphe
