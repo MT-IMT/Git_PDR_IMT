@@ -66,7 +66,7 @@ Fonctions de base de la classe Camion :
 
 - recevoir_message(...) / traiter_messages(...) : Ancien système de communication entre agents.
 
-Fonctions avancées (Optimisation & Multi-arrêts) :
+Fonctions centralisés de la classe Camion :
 
 - evaluer_meilleure_insertion(graphe, nouvelle_dest) : Cœur mathématique de l'optimisation. Teste l'insertion d'un nouveau client entre chaque arrêt prévu dans la file d'attente pour trouver la position générant le surcoût kilométrique le plus faible.
 
