@@ -121,4 +121,4 @@ Un tableau de bord s'affiche dans la console à chaque tour de boucle. Il permet
 
   - Sa charge physique en temps réel.
 
-
+# 8. Le Dispatcher Décentralisé
