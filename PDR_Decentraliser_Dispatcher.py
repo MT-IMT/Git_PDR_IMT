@@ -158,7 +158,7 @@ if __name__ == "__main__":
             
         # 3. FAIRE AVANCER LES CAMIONS
         for camion in flotte:
-            camion.faire_un_tour(g,False)
+            camion.faire_un_tour(g)
             
         tour_actuel += 1
         
