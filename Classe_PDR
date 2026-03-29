@@ -171,8 +171,13 @@ class Camion:
         if not self.disponible:
             print("Camion occupé, impossible d'assigner une nouvelle demande.")
             return
+        chemin = self.trouver_chemin_vers(destination, graphe)
+
+        if not chemin:
+            print(f"[ERREUR] {self.id} : impossible d’atteindre {destination}")
+            return
         self.demandes_assignees.append(destination)
-        self.route = self.trouver_chemin_vers(destination, graphe)
+        self.route = chemin
         self.disponible = False
         graphe.noeuds[destination].statut = "en_cours_de_livraison"
         self._demarrer_deplacement(graphe)
@@ -224,6 +229,9 @@ class Camion:
     def _arriver_a_destination(self, graphe):
         """Action effectuée quand le camion atteint le dernier sommet de sa mission."""
         # Traiter la demande (marquer comme effectuée, etc.)
+        if self.position is None:
+            print(f"[BUG] {self.id} position None à l’arrivée → ignoré")
+            return
         sommet_servi = graphe.noeuds[self.position]
         if sommet_servi.requete_presente :
             sommet_servi.requete_presente = False
