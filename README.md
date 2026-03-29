@@ -1,10 +1,12 @@
 # Git_PDR_IMT
 
 Indication :
-Nous considérons que les camions partent de l'entrepôt central au début de la journée déjà chargé.
-A chaque livraison de client, on retire la quantité de produit livré à la charge actuelle du camion
+Nous considérons que les camions partent de l'entrepôt central (le dépôt) déjà chargé.
+A chaque livraison de client, on retire la quantité de produit livré à la charge actuelle du camion. 
+La capacité du camion se recharge au maximum en retournant au dépôt.
 
 # 1. La classe Noeud représente un sommet du réseau.
+Chaque client sera forcément sur un noeud.
 Chaque nœud a notamment :
 
 - id : identifiant unique
@@ -35,7 +37,7 @@ Méthodes principales :
 - ajouter_noeud(noeud) : Ajoute un nœud au graphe.
 - ajouter_arete(source_id, cible_id, poids, **attributs) : Ajoute une route entre deux nœuds.
 Si le graphe n’est pas orienté (oriente=False), il ajoute aussi la route inverse.
-- voisins(noeud_id):Renvoie les voisins d’un nœud.
+- voisins(noeud_id): Renvoie les voisins d’un nœud.
 - poids_arete(source_id, cible_id) : Renvoie le poids d’une route directe entre deux nœuds.
 - construire_demandes() : Construit une liste des demandes à partir des nœuds où requete_presente == True.
 - dijkstra(depart_idx, arrivee_idx) : Implémente un calcul de plus court chemin.
