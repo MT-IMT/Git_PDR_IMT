@@ -1,126 +1,181 @@
 import Classe_PDR
+from Classe_PDR import  distance_entre
 
 
-def simulation_centralise(g, flotte, demandes_futures, depot=0):
-    """
-    Lance la simulation avec le Dispatcher centraliser (Heuristique d'Insertion,
-    gestion des stocks réelle, retour au dépôt et tableau de bord).
-    """
-    demandes_en_attente = []
-    print("\n=======================================================")
-    print("--- DÉBUT DE LA SIMULATION CENTRALISE ---")
-    print("=======================================================")
+############################################
+# Fonctions de Gestion Diponibilité/Chemin
+############################################
+def demandes_disponibles(graphe):  #On scan toutes les demandes qui sont présente et non prise par un camion à un instant t
+    """Retourne la liste des demandes encore non prises."""
+    demandes = []
+
+    for noeud in graphe.noeuds.values():
+        if noeud.requete_presente and noeud.statut == "en_attente":
+            demandes.append(noeud.id)
+
+    return demandes
+
+
+#################################################
+#  Trés important Heuristique de décision
+#################################################
+
+def calcul_surcout2(camion, graphe, destination):
+    """Heuristique de surcoût pour un camion."""
     
+    distance = Classe_PDR.distance_entre(graphe, camion.position, destination)
+    if distance == float("inf"):
+        return float("inf")
+
+    # HEURISTIQUE (à Ajuster)
+    surcout = distance
+
+    return surcout
+
+
+############################################
+# Messages et diffusion des demandes (la clé du décentralisé)
+############################################
+
+class Message:
+    def __init__(self, type_msg, contenu, expediteur=None):
+        self.type = type_msg  # "demande", "surcout", "vainqueur"
+        self.contenu = contenu
+        self.expediteur = expediteur
+
+
+def diffuser_demandes(camions, graphe):
+    demandes = demandes_disponibles(graphe)
+
+    for demande in demandes:
+        for camion in camions:
+            camion.recevoir_message(Message("demande", demande))
+
+
+
+def collecter_offres(camions, graphe, tour_actuel):
+    offres = {}
+
+    for camion in camions:
+        # You'll need to modify traiter_messages to accept tour_actuel
+        reponses = camion.traiter_messages(graphe, tour_actuel)
+
+        for r in reponses:
+            d = r["demande"]
+            if d not in offres:
+                offres[d] = []
+            offres[d].append(r)
+
+    return offres
+############################################
+# Enchères et assignation de la demande
+############################################
+def attribuer(offres, graphe):
+    camions_utilises = set()  # camions déjà affectés ce tour
+
+    for demande_id, liste_offres in offres.items():
+
+        # Ne garder que les camions disponibles et non déjà affectés
+        liste_offres = [
+            o for o in liste_offres
+            if o["camion"].disponible and o["camion"] not in camions_utilises
+        ]
+
+        if not liste_offres:
+            continue  # pas de camion libre pour cette demande
+
+        # Choisir le gagnant avec le coût le plus faible
+        gagnant = min(liste_offres, key=lambda x: x["cout"])
+        camion = gagnant["camion"]
+
+        # Affecter la demande
+        camion.assigner_demande(graphe, demande_id)
+
+        # Marquer le camion comme déjà utilisé pour ce tour
+        camions_utilises.add(camion)
+
+        print(f"[ENCHERE] {demande_id} → {camion.id}")
+
+
+
+####################################
+# Liste des camions libres
+####################################
+
+def camions_disponibles(camions):
+    return [c for c in camions if c.disponible]
+
+####################################
+
+##########################################################################################
+# MAIN
+##########################################################################################
+
+# Exemple d'utilisiation de nos classes
+if __name__ == "__main__":
+    g, flotte, demandes_futures = Classe_PDR.graphe_exemple()
+
+    print("\n--- DÉBUT DE LA SIMULATION (MODE SURCHARGE) ---")
     tour_actuel = 1
-    id_carg = 1
+    offres = collecter_offres(flotte, g, tour_actuel)
     
-    while any(c.route or c.cible_actuelle is not None for c in flotte) or demandes_futures or demandes_en_attente:
+    while any(c.route or c.cible_actuelle is not None for c in flotte) or demandes_futures or g.demandes:
+        id_carg = 1
         print(f"\n--- TOUR {tour_actuel} ---")
         
         # 1. APPARITION DES NOUVELLES DEMANDES
         if tour_actuel in demandes_futures:
             nouvelles_destinations = demandes_futures.pop(tour_actuel)
-            print(f">>> [ALERTE] Nouvelles demandes apparues : {nouvelles_destinations} ! <<<")
-                
+            print(f">>> [ALERTE] Nouvelles demandes apparues pour les destinations : {nouvelles_destinations} ! <<<")
             for demande in nouvelles_destinations:
                 noeud_demand = demande[0]
                 quantite = demande[1]
                 fenetre = demande[2]
-
-                demandes_en_attente.append(noeud_demand)
+                g.demandes.append(noeud_demand)
                 g.noeuds[noeud_demand].requete_presente = True
                 g.noeuds[noeud_demand].quantite = quantite
                 g.noeuds[noeud_demand].time_window = fenetre
                 g.noeuds[noeud_demand].statut = "en_attente"
                 g.noeuds[noeud_demand].id_carg = id_carg
-                id_carg += 1
+                id_carg = id_carg + 1
 
-        # 2. DISPATCHER CENTRALISERS (Heuristique d'insertion + Stock futur)
+
+        # 2. DISPATCHER INTELLIGENT
         demandes_non_assignees = []
-        for dest in demandes_en_attente:
-            qte_requise = g.noeuds[dest].quantite
-            
-            camions_eligibles = []
-            for c in flotte:
-                # Calcul du stock virtuel pour éviter les surcharges
-                liste_totale = c.file_destinations.copy()
-                if c.destination is not None and c.destination != depot:
-                    liste_totale.append(c.destination)
-                    
-                poids_deja_reserve = sum(g.noeuds[d].quantite for d in liste_totale if d != depot and g.noeuds[d].requete_presente)
-                stock_futur = c.charge_actuelle - poids_deja_reserve
-                
-                if stock_futur >= qte_requise:
-                    camions_eligibles.append((c, stock_futur))
-            
-            if camions_eligibles:
-                meilleur_camion = None
-                meilleur_index_global = 0
-                meilleur_cout_global = float('inf')
-                stock_futur_meilleur = 0
-                
-                # Évaluation de l'insertion pour trouver l'emplacement parfait
-                for tuple_camion in camions_eligibles:
-                    camion = tuple_camion[0]
-                    stock_futur = tuple_camion[1]
-                    index_opti, surcout = camion.evaluer_meilleure_insertion(g, dest)
-                    
-                    if surcout < meilleur_cout_global:
-                        meilleur_cout_global = surcout
-                        meilleur_index_global = index_opti
-                        meilleur_camion = camion
-                        stock_futur_meilleur = stock_futur
-                
-                if meilleur_camion is not None:
-                    print(f"--> [DISPATCH OPTIMISÉ] {meilleur_camion.id} insère {dest} (Stock futur garanti : {stock_futur_meilleur - qte_requise}/{meilleur_camion.capacite} kg)")
-                    meilleur_camion.insertion_demande_centralisee(g, dest, index_insertion=meilleur_index_global)
-                
-            else:
-                demandes_non_assignees.append(dest)
+        camions=camions_disponibles(flotte) #Donne seulement les camions disponibles
+        
+        # a. diffusion
+        diffuser_demandes(camions, g)
+        
+        # b. chaque camion calcule
+        offres = collecter_offres(camions, g, tour_actuel)
 
-        # 3. GESTION DU RETOUR AU DÉPÔT
-        for c in flotte:
-            # Si le camion n'a plus rien à faire, qu'il n'est pas au dépôt, et que son stock est très bas
-            if not c.file_destinations and c.cible_actuelle is None and c.position != depot and c.charge_actuelle < 5:
-                print(f"--- [LOGISTIQUE] {c.id} n'a plus assez de stock ({c.charge_actuelle}kg), retour au Depot ({depot}) ---")
-                c.insertion_demande_centralisee(g, depot)
-                
-        if demandes_non_assignees:
-            print(f"!!! [SURCHARGE] {len(demandes_non_assignees)} requetes en attente de stock/camion : {demandes_non_assignees} !!!")
-                
-        demandes_en_attente = demandes_non_assignees
-
-        # =====================================================================
-        # TABLEAU DE BORD DE LA FLOTTE
-        # =====================================================================
-        print("\n--- ETAT DES CAMIONS ---")
-        for c in flotte:
-            pos_actuelle = str(c.position) if c.position is not None else f"Vers {c.cible_actuelle}"
-            dest_actuelle = str(c.destination) if c.destination is not None else "-"
-            file_attente = str(c.file_destinations) if c.file_destinations else "[]"
+        # c. attribution
+        attribuer(offres, g)
+        for camion in camions:
+            camion.mettre_a_jour(1, g)
+        
             
-            charge_affichee = max(0, c.charge_actuelle)
-            print(f" {c.id} | Pos: {pos_actuelle:<7} | Objectif: {dest_actuelle:<3} | "
-                  f"File d'attente: {file_attente:<12} | Charge actuelle: {charge_affichee}/{c.capacite}")
-        print("---------------------------\n")
-
-        # 4. FAIRE AVANCER LES CAMIONS
+        # 3. FAIRE AVANCER LES CAMIONS
         for camion in flotte:
-            camion.faire_un_tour(g, True)
+            camion.faire_un_tour(g)
             
         tour_actuel += 1
         
-        if tour_actuel > 250: 
+        # On augmente largement la limite de sécurité car les camions vont mettre du temps !
+        if tour_actuel > 60:
             print("Limite de tours atteinte.")
+            demandes_non_servees = 0
+
+            for noeud in g.noeuds.values():
+                if noeud.requete_presente and noeud.statut == "en_attente":
+                    demandes_non_servees += 1
+            print(f"Nombre de demandes non servies à la fin : {demandes_non_servees}")
+        
             break
             
-    print("\n--- FIN DE LA SIMULATION CENTRALISE ---")
-
-
-# =========================================================================
-# MAIN
-# =========================================================================
-if __name__ == "__main__" :
-    # choisir le graphe
-    g, flotte, demandes_futures = Classe_PDR.graphe_exemple()
-    simulation_centralise(g, flotte, demandes_futures, depot=0)
+    print("\n--- FIN DE LA SIMULATION ---")
+    
+    
+    
+    
