@@ -1,4 +1,4 @@
-# Git_PDR_IMT
+# Git_PDR_IMT_Approches_centralisé_et_décentralisé_VRP_dynamique
 
 Indication :
 Nous considérons que les camions partent de l'entrepôt central (le dépôt) déjà chargé.
