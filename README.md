@@ -93,6 +93,7 @@ L'horloge globale de la simulation est régie par la variable tour_actuel. À ch
 - A. Émergence des événements (Demandes dynamiques) : Le système interroge le dictionnaire chronologique demandes_futures. Si le tour_actuel correspond à une clé du dictionnaire, les nouvelles requêtes (colis) apparaissent instantanément sur le réseau et sont placées dans la file d'attente globale
 - B. Dispatcher centralisé ou décentralisé
 - C. Phase d'Action (Mouvement de la flotte) : Chaque camion exécute sa méthode faire_un tour ou faire_un_tour_optimise
+- D. Incrémentation: l'horloge augmente de 1 tour.
 
 
 # 7. Le Dispatcher Centralisé & Heuristique d'Insertion
