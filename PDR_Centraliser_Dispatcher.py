@@ -35,7 +35,7 @@ def simulation_centralise(g, flotte, demandes_futures, depot=0):
                 g.noeuds[noeud_demand].id_carg = id_carg
                 id_carg += 1
 
-        # 2. DISPATCHER INTELLIGENT (Heuristique d'insertion + Stock futur)
+        # 2. DISPATCHER CENTRALISERS (Heuristique d'insertion + Stock futur)
         demandes_non_assignees = []
         for dest in demandes_en_attente:
             qte_requise = g.noeuds[dest].quantite
@@ -73,7 +73,7 @@ def simulation_centralise(g, flotte, demandes_futures, depot=0):
                 
                 if meilleur_camion is not None:
                     print(f"--> [DISPATCH OPTIMISÉ] {meilleur_camion.id} insère {dest} (Stock futur garanti : {stock_futur_meilleur - qte_requise}/{meilleur_camion.capacite} kg)")
-                    meilleur_camion.insertion_demande_optimisee(g, dest, index_insertion=meilleur_index_global)
+                    meilleur_camion.insertion_demande_centralisee(g, dest, index_insertion=meilleur_index_global)
                 
             else:
                 demandes_non_assignees.append(dest)
@@ -83,8 +83,7 @@ def simulation_centralise(g, flotte, demandes_futures, depot=0):
             # Si le camion n'a plus rien à faire, qu'il n'est pas au dépôt, et que son stock est très bas
             if not c.file_destinations and c.cible_actuelle is None and c.position != depot and c.charge_actuelle < 5:
                 print(f"--- [LOGISTIQUE] {c.id} n'a plus assez de stock ({c.charge_actuelle}kg), retour au Depot ({depot}) ---")
-                # UTILISATION DE LA MÉTHODE OPTIMISÉE
-                c.insertion_demande_optimisee(g, depot)
+                c.insertion_demande_centralisee(g, depot)
                 
         if demandes_non_assignees:
             print(f"!!! [SURCHARGE] {len(demandes_non_assignees)} requetes en attente de stock/camion : {demandes_non_assignees} !!!")
@@ -107,7 +106,6 @@ def simulation_centralise(g, flotte, demandes_futures, depot=0):
 
         # 4. FAIRE AVANCER LES CAMIONS
         for camion in flotte:
-            # UTILISATION DE TA MÉTHODE OPTIMISÉE
             camion.faire_un_tour(g, True)
             
         tour_actuel += 1
@@ -116,7 +114,7 @@ def simulation_centralise(g, flotte, demandes_futures, depot=0):
             print("Limite de tours atteinte.")
             break
             
-    print("\n--- FIN DE LA SIMULATION OPTIMISÉE ---")
+    print("\n--- FIN DE LA SIMULATION CENTRALISE ---")
 
 
 # =========================================================================
