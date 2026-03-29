@@ -125,8 +125,8 @@ Un tableau de bord s'affiche dans la console à chaque tour de boucle. Il permet
 # 9. Résultat
 
 Graphe exemple:
-Centralisé : 
+Centralisé : 53 tours
 
 
 Graphe complexe: 
-Centralisé :
+Centralisé : 78 tours
