@@ -1,3 +1,6 @@
+import Classe_PDR
+
+
 def simulation_centralise(g, flotte, demandes_futures, depot=0):
     """
     Lance la simulation avec le Dispatcher centraliser (Heuristique d'Insertion,
@@ -68,9 +71,10 @@ def simulation_centralise(g, flotte, demandes_futures, depot=0):
                         meilleur_camion = camion
                         stock_futur_meilleur = stock_futur
                 
-                print(f"--> [DISPATCH OPTIMISÉ] {meilleur_camion.id} insère {dest} (Stock futur garanti : {stock_futur_meilleur - qte_requise}/{meilleur_camion.capacite} kg)")
+                if meilleur_camion is not None:
+                    print(f"--> [DISPATCH OPTIMISÉ] {meilleur_camion.id} insère {dest} (Stock futur garanti : {stock_futur_meilleur - qte_requise}/{meilleur_camion.capacite} kg)")
+                    meilleur_camion.insertion_demande_optimisee(g, dest, index_insertion=meilleur_index_global)
                 
-                meilleur_camion.assigner_demande_optimisee(g, dest, index_insertion=meilleur_index_global)
             else:
                 demandes_non_assignees.append(dest)
 
@@ -79,8 +83,8 @@ def simulation_centralise(g, flotte, demandes_futures, depot=0):
             # Si le camion n'a plus rien à faire, qu'il n'est pas au dépôt, et que son stock est très bas
             if not c.file_destinations and c.cible_actuelle is None and c.position != depot and c.charge_actuelle < 5:
                 print(f"--- [LOGISTIQUE] {c.id} n'a plus assez de stock ({c.charge_actuelle}kg), retour au Depot ({depot}) ---")
-                # UTILISATION DE TA MÉTHODE OPTIMISÉE
-                c.assigner_demande_optimisee(g, depot)
+                # UTILISATION DE LA MÉTHODE OPTIMISÉE
+                c.insertion_demande_optimisee(g, depot)
                 
         if demandes_non_assignees:
             print(f"!!! [SURCHARGE] {len(demandes_non_assignees)} requetes en attente de stock/camion : {demandes_non_assignees} !!!")
@@ -104,7 +108,7 @@ def simulation_centralise(g, flotte, demandes_futures, depot=0):
         # 4. FAIRE AVANCER LES CAMIONS
         for camion in flotte:
             # UTILISATION DE TA MÉTHODE OPTIMISÉE
-            camion.faire_un_tour_optimise(g, tour_actuel)
+            camion.faire_un_tour(g, True)
             
         tour_actuel += 1
         
@@ -120,5 +124,5 @@ def simulation_centralise(g, flotte, demandes_futures, depot=0):
 # =========================================================================
 if __name__ == "__main__" :
     # choisir le graphe
-    g, flotte, demandes_futures = graphe_exemple()
+    g, flotte, demandes_futures = Classe_PDR.graphe_exemple()
     simulation_centralise(g, flotte, demandes_futures, depot=0)
