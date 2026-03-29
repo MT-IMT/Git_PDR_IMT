@@ -101,27 +101,25 @@ Fonctions centralisés de la classe Camion :
 
 Plutôt que d'assigner la livraison au camion le plus proche géographiquement et de l'ajouter à la fin de son trajet (approche naïve), le dispatcher optimisé utilise une Cheapest Insertion Heuristic :
 
-    Filtre de Stock Prévisionnel : Avant d'accepter une commande, le dispatcher calcule le "stock futur" du camion (charge actuelle - poids de toutes les commandes déjà présentes dans sa file d'attente). Un camion n'accepte une commande que s'il a une garantie de stock.
+- Filtre de Stock Prévisionnel : Avant d'accepter une commande, le dispatcher calcule le "stock futur" du camion (charge actuelle - poids de toutes les commandes déjà présentes dans sa file d'attente). Un camion n'accepte une commande que s'il a une garantie de stock.
 
-    Évaluation de l'Insertion : La méthode evaluer_meilleure_insertion simule l'insertion du nouveau client entre chaque arrêt déjà prévu dans la file_destinations.
+- Évaluation de l'Insertion : La méthode evaluer_meilleure_insertion simule l'insertion du nouveau client entre chaque arrêt déjà prévu dans la file_destinations.
 
-    Calcul du Surcoût : Il calcule l'impact kilométrique de ce détour via la formule : Distance(A, Client) + Distance(Client, B) - Distance(A, B). La commande est assignée au camion (et à l'index précis) offrant le surcoût global le plus bas.
+- Calcul du Surcoût : Il calcule l'impact kilométrique de ce détour via la formule : Distance(A, Client) + Distance(Client, B) - Distance(A, B). La commande est assignée au camion (et à l'index précis) offrant le surcoût global le plus bas.
 
-# 11. Logistique de Ravitaillement Automatique
-
+Ravitaillement au dépôt: 
 Les camions gèrent désormais leurs propres allers-retours au dépôt. Si un camion termine sa tournée (ou est inactif) et que sa charge_actuelle tombe sous un seuil critique (ex: < 5 kg), le système appelle automatiquement la méthode assigner_demande_optimisee(g, depot) pour le renvoyer refaire le plein.
 
-# 12. Tableau de Bord en Temps Réel (Live Dashboard)
-
+Affichage:
 Pour auditer le comportement de l'algorithme, un tableau de bord s'affiche dans la console à chaque tour de boucle. Il permet de monitorer en direct pour chaque camion :
 
-    Sa position instantanée (ou sa direction en transit).
+  - Sa position instantanée (ou sa direction en transit).
 
-    Son objectif immédiat.
+  - Son objectif immédiat.
 
-    Le contenu exact de sa file d'attente (multi-arrêts).
+  - Le contenu exact de sa file d'attente (multi-arrêts).
 
-    Sa charge physique en temps réel.
+  - Sa charge physique en temps réel.
 
 # 13. Scalabilité et Graphes Complexes
 
