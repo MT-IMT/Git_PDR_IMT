@@ -45,47 +45,48 @@ Si le graphe n’est pas orienté (oriente=False), il ajoute aussi la route inve
 
 # 4. Camion
 Représente un véhicule de livraison autonome se déplaçant sur le graphe.
+
 Attributs :
 
-    État général : id, capacite, disponible, charge_actuelle, cargaison.
+- État général : id, capacite, disponible, charge_actuelle, cargaison.
 
-    Déplacement : position, destination, cible_actuelle, route, temps_restant.
+- Déplacement : position, destination, cible_actuelle, route, temps_restant.
 
-    Attributs avancés (Optimisation) : file_destinations (pour gérer les arrêts multiples) et noeud_depot (pour le retour automatique).
+- Attributs (Centralisé) : file_destinations (pour gérer les arrêts multiples) et noeud_depot (pour le retour automatique).
 
 Fonctions de base de la classe Camion :
 
-    demander(...) / recharger() / decharger(...) : Gestion du stock physique du camion.
+- demander(...) / recharger() / decharger(...) : Gestion du stock physique du camion.
 
-    trouver_chemin_vers(...) : Appelle Dijkstra pour calculer la route jusqu'à l'objectif.
+- trouver_chemin_vers(...) : Appelle Dijkstra pour calculer la route jusqu'à l'objectif.
 
-    _demarrer_deplacement(...) / mettre_a_jour(...) / avancer(...) : Logique de déplacement abstrait/continu.
+- _demarrer_deplacement(...) / mettre_a_jour(...) / avancer(...) : Logique de déplacement abstrait/continu.
 
-    assigner_demande(...) / faire_un_tour(...) / _arriver_a_destination(...) : Moteur de déplacement "Tour par Tour" classique (un arrêt à la fois).
+- assigner_demande(...) / faire_un_tour(...) / _arriver_a_destination(...) : Moteur de déplacement "Tour par Tour" classique (un arrêt à la fois).
 
-    recevoir_message(...) / traiter_messages(...) : Ancien système de communication entre agents.
+- recevoir_message(...) / traiter_messages(...) : Ancien système de communication entre agents.
 
 Fonctions avancées (Optimisation & Multi-arrêts) :
 
-    evaluer_meilleure_insertion(graphe, nouvelle_dest) : Cœur mathématique de l'optimisation. Teste l'insertion d'un nouveau client entre chaque arrêt prévu dans la file d'attente pour trouver la position générant le surcoût kilométrique le plus faible.
+- evaluer_meilleure_insertion(graphe, nouvelle_dest) : Cœur mathématique de l'optimisation. Teste l'insertion d'un nouveau client entre chaque arrêt prévu dans la file d'attente pour trouver la position générant le surcoût kilométrique le plus faible.
 
-    assigner_demande_optimisee(...) : Insère la demande à l'index optimal calculé.
+- assigner_demande_optimisee(...) : Insère la demande à l'index optimal calculé.
 
-    passer_a_la_prochaine_destination(...) : Permet au camion d'enchaîner directement avec le prochain client de sa file sans s'arrêter.
+- passer_a_la_prochaine_destination(...) : Permet au camion d'enchaîner directement avec le prochain client de sa file sans s'arrêter.
 
-    faire_un_tour_optimise(...) : Moteur de déplacement de la simulation avancée.
+- faire_un_tour_optimise(...) : Moteur de déplacement de la simulation avancée.
 
-    _arriver_a_destination_optimisee(...) : Gère le déchargement physique, le rechargement automatique si le nœud actuel est le dépôt, puis l'enchaînement avec la mission suivante.
+- _arriver_a_destination_optimisee(...) : Gère le déchargement physique, le rechargement automatique si le nœud actuel est le dépôt, puis l'enchaînement avec la mission suivante.
 
 # 5. Utilitaire et Environnement
 
-    distance_entre(graphe, depart, arrivee) : Calcule la distance entre deux nœuds sans modifier l'état des camions (utilisé par le Dispatcher).
+- distance_entre(graphe, depart, arrivee) : Calcule la distance entre deux nœuds sans modifier l'état des camions (utilisé par le Dispatcher).
 
-    graphe_exemple() : Génère une petite ville de test (4x4, 16 nœuds, 2 camions).
+- graphe_exemple() : Génère une petite ville de test (4x4, 16 nœuds, 2 camions).
 
-    graphe_complexe() : Génère un environnement massif pour les "Stress Tests" (6x6, 36 nœuds, trafic hétérogène, 3 camions haute capacité).
+- graphe_complexe() : Génère un environnement massif pour les "Stress Tests" (6x6, 36 nœuds, trafic hétérogène, 3 camions haute capacité).
 
-# 9. Ce que fait le main
+# 6. Ce que fait le main
 Étape 1 : création du graphe
 Étape 2 : création de deux camions
 Étape 3 : création d’une ville en grille 4x4. On crée 16 nœuds, de A à P, avec ids de 0 à 15.
@@ -96,7 +97,7 @@ Fonctions avancées (Optimisation & Multi-arrêts) :
 2. Dispatch intelligent
 3. Avancer les camions
 
-# 10. Le Dispatcher Intelligent & L'Heuristique d'Insertion
+# 7. Le Dispatcher Intelligent & L'Heuristique d'Insertion
 
 Plutôt que d'assigner la livraison au camion le plus proche géographiquement et de l'ajouter à la fin de son trajet (approche naïve), le dispatcher optimisé utilise une Cheapest Insertion Heuristic :
 
