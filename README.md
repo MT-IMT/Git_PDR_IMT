@@ -55,9 +55,8 @@ Attributs importants :
 - cible_actuelle
 - charge_actuelle
 - cargaison
-  Pour le centraliser:
--file_destinations  
--noeud_depot 
+- file_destinations  
+- noeud_depot 
 
 # 5. Gestion du chargement
 - demander(...) : 
