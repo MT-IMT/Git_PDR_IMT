@@ -97,7 +97,7 @@ Fonctions centralisés de la classe Camion :
 2. Dispatch intelligent
 3. Avancer les camions
 
-# 7. Le Dispatcher Intelligent & L'Heuristique d'Insertion
+# 7. Le Dispatcher Centralisé & Heuristique d'Insertion
 
 Plutôt que d'assigner la livraison au camion le plus proche géographiquement et de l'ajouter à la fin de son trajet (approche naïve), le dispatcher optimisé utilise une Cheapest Insertion Heuristic :
 
@@ -121,6 +121,4 @@ Pour auditer le comportement de l'algorithme, un tableau de bord s'affiche dans 
 
   - Sa charge physique en temps réel.
 
-# 13. Scalabilité et Graphes Complexes
 
-Pour prouver l'efficacité de l'heuristique (Benchmark), le code inclut désormais une fonction graphe_complexe(). Elle génère un environnement de test massif (grille 6x6, 36 nœuds, 3 camions à haute capacité) permettant de lancer de véritables "avalanches de requêtes" et de tester les limites du Pathfinding et du Dispatcher.
