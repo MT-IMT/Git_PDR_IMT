@@ -111,7 +111,7 @@ Ravitaillement au dépôt:
 Les camions gèrent désormais leurs propres allers-retours au dépôt. Si un camion termine sa tournée (ou est inactif) et que sa charge_actuelle tombe sous un seuil critique (ex: < 5 kg), le système appelle automatiquement la méthode assigner_demande_optimisee(g, depot) pour le renvoyer refaire le plein.
 
 Affichage:
-Pour auditer le comportement de l'algorithme, un tableau de bord s'affiche dans la console à chaque tour de boucle. Il permet de monitorer en direct pour chaque camion :
+Un tableau de bord s'affiche dans la console à chaque tour de boucle. Il permet de monitorer en direct pour chaque camion :
 
   - Sa position instantanée (ou sa direction en transit).
 
