@@ -86,16 +86,14 @@ Fonctions centralisés de la classe Camion :
 
 - graphe_complexe() : Génère un environnement massif pour les "Stress Tests" (6x6, 36 nœuds, trafic hétérogène, 3 camions haute capacité).
 
-# 6. Ce que fait le main
-Étape 1 : création du graphe
-Étape 2 : création de deux camions
-Étape 3 : création d’une ville en grille 4x4. On crée 16 nœuds, de A à P, avec ids de 0 à 15.
-Étape 4 : ajout des routes
-Étape 5 : demandes futures
-Étape 6 : boucle de simulation
-1. Apparition des nouvelles demandes
-2. Dispatch intelligent
-3. Avancer les camions
+# 6. Gestion du temps et des tours
+Le temps s'écoule de manière séquentielle, où une unité de temps correspond à "1 Tour".
+L'horloge globale de la simulation est régie par la variable tour_actuel. À chaque itération de la boucle principale, l'algorithme exécute une séquence d'actions strictes avant de faire avancer le temps :
+
+- A. Émergence des événements (Demandes dynamiques) : Le système interroge le dictionnaire chronologique demandes_futures. Si le tour_actuel correspond à une clé du dictionnaire, les nouvelles requêtes (colis) apparaissent instantanément sur le réseau et sont placées dans la file d'attente globale
+- B. Dispatcher centralisé ou décentralisé
+- C. Phase d'Action (Mouvement de la flotte) : Chaque camion exécute sa méthode faire_un tour ou faire_un_tour_optimise
+
 
 # 7. Le Dispatcher Centralisé & Heuristique d'Insertion
 
