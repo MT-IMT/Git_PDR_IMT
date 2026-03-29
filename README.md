@@ -117,7 +117,7 @@ Elle sert dans le dispatch pour choisir le camion libre le plus proche d’une d
 2. Dispatch intelligent
 3. Avancer les camions
 
-10. Le Dispatcher Intelligent & L'Heuristique d'Insertion
+# 10. Le Dispatcher Intelligent & L'Heuristique d'Insertion
 
 Plutôt que d'assigner la livraison au camion le plus proche géographiquement et de l'ajouter à la fin de son trajet (approche naïve), le dispatcher optimisé utilise une Cheapest Insertion Heuristic :
 
@@ -127,10 +127,11 @@ Plutôt que d'assigner la livraison au camion le plus proche géographiquement e
 
     Calcul du Surcoût : Il calcule l'impact kilométrique de ce détour via la formule : Distance(A, Client) + Distance(Client, B) - Distance(A, B). La commande est assignée au camion (et à l'index précis) offrant le surcoût global le plus bas.
 
-11. Logistique de Ravitaillement Automatique
+# 11. Logistique de Ravitaillement Automatique
 
 Les camions gèrent désormais leurs propres allers-retours au dépôt. Si un camion termine sa tournée (ou est inactif) et que sa charge_actuelle tombe sous un seuil critique (ex: < 5 kg), le système appelle automatiquement la méthode assigner_demande_optimisee(g, depot) pour le renvoyer refaire le plein.
-12. Tableau de Bord en Temps Réel (Live Dashboard)
+
+# 12. Tableau de Bord en Temps Réel (Live Dashboard)
 
 Pour auditer le comportement de l'algorithme, un tableau de bord s'affiche dans la console à chaque tour de boucle. Il permet de monitorer en direct pour chaque camion :
 
@@ -142,6 +143,6 @@ Pour auditer le comportement de l'algorithme, un tableau de bord s'affiche dans 
 
     Sa charge physique en temps réel.
 
-13. Scalabilité et Graphes Complexes
+# 13. Scalabilité et Graphes Complexes
 
 Pour prouver l'efficacité de l'heuristique (Benchmark), le code inclut désormais une fonction graphe_complexe(). Elle génère un environnement de test massif (grille 6x6, 36 nœuds, 3 camions à haute capacité) permettant de lancer de véritables "avalanches de requêtes" et de tester les limites du Pathfinding et du Dispatcher.
