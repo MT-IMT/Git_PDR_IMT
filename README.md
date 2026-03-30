@@ -70,7 +70,7 @@ Fonctions centralisés de la classe Camion :
 
 - evaluer_meilleure_insertion(graphe, nouvelle_dest) : Cœur mathématique de l'optimisation. Teste l'insertion d'un nouveau client entre chaque arrêt prévu dans la file d'attente pour trouver la position générant le surcoût kilométrique le plus faible.
 
-- assigner_demande_optimisee(...) : Insère la demande à l'index optimal calculé.
+- insertion_demande_centralisee(...) : Insère la demande à l'index optimal calculé.
 
 - passer_a_la_prochaine_destination(...) : Permet au camion d'enchaîner directement avec le prochain client de sa file sans s'arrêter.
 
