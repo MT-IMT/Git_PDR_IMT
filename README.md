@@ -74,9 +74,9 @@ Fonctions centralisés de la classe Camion :
 
 - passer_a_la_prochaine_destination(...) : Permet au camion d'enchaîner directement avec le prochain client de sa file sans s'arrêter.
 
-- faire_un_tour_optimise(...) : Moteur de déplacement de la simulation avancée.
+- faire_un_tour_centralise(...) : Moteur de déplacement de la simulation.
 
-- _arriver_a_destination_optimisee(...) : Gère le déchargement physique, le rechargement automatique si le nœud actuel est le dépôt, puis l'enchaînement avec la mission suivante.
+- _arriver_a_destination_centraliser(...) : Gère le déchargement physique, le rechargement automatique si le nœud actuel est le dépôt, puis l'enchaînement avec la mission suivante.
 
 # 5. Utilitaire et Environnement
 
