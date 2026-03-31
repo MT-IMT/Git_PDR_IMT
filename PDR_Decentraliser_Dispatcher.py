@@ -91,11 +91,18 @@ def attribuer(offres, graphe):
         # Affecter la demande
         camion.assigner_demande(graphe, demande_id)
 
+
         # Marquer le camion comme déjà utilisé pour ce tour
         camions_utilises.add(camion)
 
         print(f"[ENCHERE] {demande_id} → {camion.id}")
 
+
+def simulation_terminee(flotte, graphe, demandes_futures):
+    camions_actifs = any(c.route or c.cible_actuelle is not None for c in flotte)
+    demandes_en_cours = any(n.requete_presente for n in graphe.noeuds.values())
+
+    return not (camions_actifs or demandes_futures or demandes_en_cours)
 
 
 ####################################
@@ -120,7 +127,7 @@ if __name__ == "__main__":
     tour_actuel = 1
     offres = collecter_offres(flotte, g, tour_actuel)
     
-    while any(c.route or c.cible_actuelle is not None for c in flotte) or demandes_futures or g.demandes:
+    while not simulation_terminee(flotte, g, demandes_futures):
         id_carg = 1
         print(f"\n--- TOUR {tour_actuel} ---")
         
@@ -164,7 +171,7 @@ if __name__ == "__main__":
         tour_actuel += 1
         
         # On augmente largement la limite de sécurité car les camions vont mettre du temps !
-        if tour_actuel > 60:
+        if tour_actuel > 100:
             print("Limite de tours atteinte.")
             demandes_non_servees = 0
 
