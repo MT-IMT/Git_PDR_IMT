@@ -122,6 +122,75 @@ Un tableau de bord s'affiche dans la console à chaque tour de boucle. Il permet
 
 # 8. Le Dispatcher Décentralisé
 
+
+Contrairement à l’approche centralisée, il n’existe ici **aucune entité globale** qui prend les décisions. 
+Le système repose sur une logique **distribuée et multi-agents**, où chaque camion agit de manière autonome.
+
+Chaque camion est capable de :
+* Recevoir les demandes.
+* Évaluer leur coût.
+* Proposer une offre.
+* Être sélectionné pour effectuer la livraison.
+
+Le mécanisme utilisé est inspiré des **systèmes d’enchères (auction-based)**.
+
+## Principe général
+
+À chaque tour de simulation, le dispatcher décentralisé suit une séquence bien définie :
+
+1. **Diffusion** des demandes vers les camions.
+2. **Calcul** des surcoûts par chaque camion.
+3. **Collecte** des offres.
+4. **Attribution** des demandes aux meilleurs camions.
+
+Ce processus est répété dynamiquement à chaque tour.
+
+## a. Diffusion des demandes
+
+La fonction `diffuser_demandes` permet d’envoyer chaque demande active à tous les camions disponibles. Chaque demande est encapsulée dans un objet `Message` :
+
+* **Type :** `"demande"`
+* **Contenu :** identifiant du nœud à desservir
+
+Chaque camion stocke ces messages dans une **boîte de réception (`boite_reception`)**. Cela simule une communication simple entre agents dans un système distribué.
+
+## b. Calcul local du surcoût
+
+Chaque camion traite ses messages via la méthode :
+`traiter_messages(graphe, tour_actuel)`
+
+Cette méthode parcourt la `boite_reception` du camion et, pour chaque message de type "demande", calcule un coût associé via :
+`calcul_surcout(graphe, destination, tour_actuel)`
+
+### Algorithme de calcul
+Le surcoût repose sur deux piliers majeurs :
+* **La distance** jusqu’à la destination (calculée via l'algorithme de Dijkstra).
+* **Une pénalité** si la livraison dépasse la fenêtre temporelle (`time_window`).
+
+$$surcoût = distance + pénalité\_de\_retard$$
+
+> **Cas particuliers :**
+> * Si aucun chemin n’existe : $coût = \infty$.
+> * Si la contrainte temporelle est violée : application d'une pénalisation forte.
+
+Chaque camion génère ensuite une **offre** contenant l'identifiant de la demande, l'identifiant du camion et le coût calculé.
+
+
+## c. Collecte des offres
+
+La fonction `collecter_offres` centralise toutes les propositions des camions. Les offres sont structurées sous la forme :
+`demande_id` $\rightarrow$ `liste d’offres (camion, coût)`
+
+* Seules les offres valides (coût fini) sont conservées.
+* Cette étape simule une remontée d’information sans prise de décision globale immédiate.
+
+## d. Attribution des demandes (enchères)
+
+La fonction `attribuer` sélectionne, pour chaque demande, l’offre ayant le **coût minimal**.
+
+```python
+# Logique de sélection simplifiée
+gagnant = min(liste_offres, key=lambda x: x["cout"])
 # 9. Résultat
 
 Graphe exemple:
