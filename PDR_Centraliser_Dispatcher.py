@@ -124,4 +124,4 @@ if __name__ == "__main__" :
     # choisir le graphe
     #g, flotte, demandes_futures = Classe_PDR.graphe_exemple()
     g, flotte, demandes_futures = Classe_PDR.graphe_complexe()
-    simulation_centralise(g, flotte, demandes_futures, depot=15) # mettre le bon dépôt (15: graphe complexe)(0:graphe exemple)
+    simulation_centralise(g, flotte, demandes_futures, depot=15) # mettre le bon dépôt (15: graphe complexe)(0:graphe exemple)(0: graphe deux villes)
