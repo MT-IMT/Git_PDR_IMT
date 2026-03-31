@@ -539,7 +539,7 @@ class Camion:
                 self.cible_actuelle = None
                 print(f"[Tour] Camion {self.id} est ARRIVÉ au nœud {self.position}.")
                 if self.position == self.destination:
-                    self._arriver_a_destination(g,self.id_livr_en_cours)
+                    self._arriver_a_destination(graphe,self.id_livr_en_cours)
                     
         # CAS 3 : Le camion est sur un nœud mais n'a nulle part où aller
         else:
