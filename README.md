@@ -126,7 +126,7 @@ Un tableau de bord s'affiche dans la console à chaque tour de boucle. Il permet
 
 Graphe exemple:
 - Centralisé : 53 tours
-- Décentralisé : 60 tours
+- Décentralisé : 52 tours
 
 Graphe deux villes:
 - Centralisé: 51 tours
@@ -134,5 +134,5 @@ Graphe deux villes:
 
 Graphe complexe: 
 -Centralisé : 78 tours
--Décentralisé : 60 tours
+-Décentralisé : 84 tours
 
