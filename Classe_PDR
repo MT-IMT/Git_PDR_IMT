@@ -153,7 +153,7 @@ class Camion:
             raise ValueError("Camion déjà chargé")
         poid_rajouter = self.capacite - self.charge_actuelle
         self.charge_actuelle = self.capacite 
-        print(f"Camion {self.id} : chargé {poid_rajouter} kg. Charge totale = {self.charge_actuelle}")
+        print(f"Lorsque le Camion {self.id} arrivera à 0 : sera rechargé de {poid_rajouter} kg. Charge totale = {self.charge_actuelle}")
 
     def decharger(self, id_cargaison):
         """Décharge une marchandise"""
@@ -247,7 +247,7 @@ class Camion:
             self.verifier_camion_vide(graphe)
         if sommet_servi.id != 0 :
             self.disponible = True
-            if self.charge_actuelle != self.capacite :
+            if self.charge_actuelle != self.capacite and self.charge_actuelle < 4 :
                 self.recharger()
         
 
@@ -258,7 +258,7 @@ class Camion:
             id_noeud = graphe.demandes[i]
             if self.charge_actuelle < graphe.noeuds[id_noeud].quantite :
                 en_capacite_livrer = True
-        if not en_capacite_livrer:
+        if not en_capacite_livrer and self.charge_actuelle < 4 :
             self.assigner_demande(graphe,0)
             self.trouver_chemin_vers(0, graphe)
             self.recharger()
@@ -544,7 +544,7 @@ class Camion:
                 self.cible_actuelle = None
                 print(f"[Tour] Camion {self.id} est ARRIVÉ au nœud {self.position}.")
                 if self.position == self.destination:
-                    self._arriver_a_destination(graphe,self.id_livr_en_cours)
+                    self._arriver_a_destination(graphe)
                     
         # CAS 3 : Le camion est sur un nœud mais n'a nulle part où aller
         else:
