@@ -191,6 +191,8 @@ La fonction `attribuer` sélectionne, pour chaque demande, l’offre ayant le **
 ```python
 # Logique de sélection simplifiée
 gagnant = min(liste_offres, key=lambda x: x["cout"])
+```
+
 # 9. Résultat
 
 Graphe exemple:
