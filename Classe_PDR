@@ -232,11 +232,16 @@ class Camion:
         if self.position is None:
             print(f"[BUG] {self.id} position None à l’arrivée → ignoré")
             return
+        
         sommet_servi = graphe.noeuds[self.position]
+
+        
         if sommet_servi.requete_presente :
             sommet_servi.requete_presente = False
             sommet_servi.statut = "servi"
             print(f"Camion {self.id} a servi le sommet {sommet_servi.nom}")
+            if sommet_servi.id in graphe.demandes:
+                graphe.demandes.remove(sommet_servi.id)
             self.disponible = True
             self.charge_actuelle -= sommet_servi.quantite
             self.verifier_camion_vide(graphe)
@@ -619,54 +624,6 @@ def graphe_exemple():
         8:  [(1, 2, (8, 14)), (14, 2, (8, 14)), (2, 2, (8, 14)), (11, 2, (8, 14))], # Tour 8 : Énorme vague de 4 requêtes !
         15: [(4, 2, (15, 21)), (9, 2, (15, 21)), (6, 2, (15, 21)), (8, 2, (15, 21))], # Tour 15 : Encore 4 requêtes
         20: [(5, 2, (20, 26)), (10, 2, (20, 26))] # Tour 20 : Retour au centre
-    }
-
-    return g, flotte, demandes_futures
-
-
-def graphe_deux_villes():
-    """
-    Génère deux agglomérations séparées par une très longue autoroute.
-    Idéal pour tester l'intelligence du dispatch et la gestion du stock.
-    """
-    g = Graphe(oriente=False)
-    depot = 0
-    
-    # 2 gros camions
-    camion1 = Camion("Camion-01", capacite=50, position_depart=depot)
-    camion2 = Camion("Camion-02", capacite=50, position_depart=depot)
-    
-    noeuds_data = [
-        # Ville A (où se trouve le dépôt)
-        (0, "Dépôt_A", 0, 0), (1, "Quartier_A1", 0, 2), (2, "Quartier_A2", 2, 0), 
-        (3, "Quartier_A3", 0, -2), (4, "Quartier_A4", -2, 0),
-        # L'autoroute
-        (5, "Péage_A", 4, 0), (6, "Péage_B", 20, 0),
-        # Ville B
-        (7, "Centre_B", 24, 0), (8, "Quartier_B1", 24, 2), (9, "Quartier_B2", 26, 0), 
-        (10, "Quartier_B3", 24, -2), (11, "Quartier_B4", 22, 0)
-    ]
-    
-    for id_n, nom, x, y in noeuds_data:
-        g.ajouter_noeud(Noeud(id_n, nom, x, y, (0, 0), 100))
-
-    # Routes Ville A (très rapides, poids = 1)
-    g.ajouter_arete(0, 1, 1); g.ajouter_arete(0, 2, 1); g.ajouter_arete(0, 3, 1); g.ajouter_arete(0, 4, 1)
-    g.ajouter_arete(2, 5, 2) # Route vers le Péage A
-    
-    # L'Autoroute Interurbaine (Très longue, poids = 15)
-    g.ajouter_arete(5, 6, 15) 
-    
-    # Routes Ville B
-    g.ajouter_arete(6, 7, 2) # Péage B vers Centre B
-    g.ajouter_arete(7, 8, 1); g.ajouter_arete(7, 9, 1); g.ajouter_arete(7, 10, 1); g.ajouter_arete(7, 11, 1)
-
-    flotte = [camion1, camion2]
-
-    demandes_futures = {
-        2: [(8, 10, (2, 50)), (9, 10, (2, 50)), (10, 10, (2, 50))], # Tour 2 : Grosse demande globale Ville B
-        15: [(1, 5, (15, 30)), (3, 5, (15, 30))], # Tour 15 : Petites commandes Ville A
-        30: [(11, 25, (30, 80))] # Tour 30 : Énorme commande Ville B (Oligera à refaire le plein)
     }
 
     return g, flotte, demandes_futures
