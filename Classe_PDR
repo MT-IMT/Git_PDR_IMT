@@ -724,7 +724,7 @@ def graphe_france():
     camion3 = Camion("Camion-03", capacite=30, position_depart=depot)
     
     # Dictionnaire des grandes villes françaises avec leurs coordonnées approximatives (x, y)
-    # Utilisation d'un système de coordonnées simplifié pour représenter la géographie
+    # On utilise un système de coordonnées simplifié pour représenter la géographie
     villes = {
         # Nord
         "Lille": (50, 95),
@@ -904,9 +904,9 @@ def graphe_france():
         if source in villes and cible in villes:
             g.ajouter_arete(source, cible, poids=distance)
         else:
-            # Ajouter des villes intermédiaires si nécessaire
+            # Ajout des villes intermédiaires
             if source not in villes:
-                # Ajouter la ville manquante avec coordonnées approximatives
+                # Ajout des ville manquantes avec coordonnées approximatives
                 if source == "Chartres":
                     g.ajouter_noeud(Noeud(source, source, 40, 68, (0, 1440), 0))
                     villes[source] = (40, 68)
