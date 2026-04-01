@@ -121,8 +121,8 @@ def camions_disponibles(camions):
 # Exemple d'utilisiation de nos classes
 if __name__ == "__main__":
     #g, flotte, demandes_futures = Classe_PDR.graphe_exemple()
-    g, flotte, demandes_futures = Classe_PDR.graphe_complexe()
-
+    #g, flotte, demandes_futures = Classe_PDR.graphe_complexe()
+    g, flotte, demandes_futures = Classe_PDR.graphe_france()
     print("\n--- DÉBUT DE LA SIMULATION (MODE SURCHARGE) ---")
     tour_actuel = 1
     offres = collecter_offres(flotte, g, tour_actuel)
@@ -171,7 +171,7 @@ if __name__ == "__main__":
         tour_actuel += 1
         
         # On augmente largement la limite de sécurité car les camions vont mettre du temps !
-        if tour_actuel > 100:
+        if tour_actuel > 8000:
             print("Limite de tours atteinte.")
             demandes_non_servees = 0
 
