@@ -139,8 +139,8 @@ class Camion:
         self.route = []                       # liste d'identifiants de nœuds à suivre (itinéraire)
         self.temps_restant  = 0.0      # temps avant d'arriver au prochain sommet
         self.boite_reception = []
-        self.file_destinations = []      # Nouveau : file d'attente des destinations
-        self.noeud_depot = position_depart  # Nouveau : mémorisation du dépôt
+        self.file_destinations = []      # file d'attente des destinations
+        self.noeud_depot = position_depart  #mémorisation du dépôt
 
     def demander(self, id_cargaison, poids_marchandise, marchandise):
         """Réserve une marchandise pour le client si la capacité le permet."""
@@ -245,7 +245,7 @@ class Camion:
             self.disponible = True
             self.charge_actuelle -= sommet_servi.quantite
             self.verifier_camion_vide(graphe)
-        if sommet_servi.id != 0 :
+        if sommet_servi.id != self.noeud_depot :
             self.disponible = True
             if self.charge_actuelle != self.capacite and self.charge_actuelle < 4 :
                 self.recharger()
@@ -259,8 +259,8 @@ class Camion:
             if self.charge_actuelle < graphe.noeuds[id_noeud].quantite :
                 en_capacite_livrer = True
         if not en_capacite_livrer and self.charge_actuelle < 4 :
-            self.assigner_demande(graphe,0)
-            self.trouver_chemin_vers(0, graphe)
+            self.assigner_demande(graphe,self.noeud_depot)
+            self.trouver_chemin_vers(self.noeud_depot, graphe)
             self.recharger()
         
     def recevoir_message(self, message):
@@ -708,9 +708,309 @@ def graphe_complexe():
 
     return g, flotte, demandes_futures
 
+def graphe_france():
+    """
+    Crée un graphe représentant le réseau autoroutier français avec les grandes villes.
+    Les poids représentent les distances approximatives en km entre les villes.
+    """
+    g = Graphe(oriente=False)
+    
+    # Dépôt central (Paris)
+    depot = "Paris"
+    
+    # Création des camions (3 camions avec capacité de 30 unités)
+    camion1 = Camion("Camion-01", capacite=30, position_depart=depot)
+    camion2 = Camion("Camion-02", capacite=30, position_depart=depot)
+    camion3 = Camion("Camion-03", capacite=30, position_depart=depot)
+    
+    # Dictionnaire des grandes villes françaises avec leurs coordonnées approximatives (x, y)
+    # Utilisation d'un système de coordonnées simplifié pour représenter la géographie
+    villes = {
+        # Nord
+        "Lille": (50, 95),
+        "Amiens": (45, 85),
+        "Rouen": (40, 75),
+        "Caen": (35, 68),
+        "Brest": (15, 60),
+        "Rennes": (25, 60),
+        
+        # Est
+        "Strasbourg": (75, 70),
+        "Metz": (70, 78),
+        "Nancy": (72, 72),
+        "Reims": (55, 82),
+        "Dijon": (60, 62),
+        "Besançon": (65, 60),
+        
+        # Centre
+        "Paris": (45, 75),
+        "Orléans": (45, 62),
+        "Tours": (40, 60),
+        "Bourges": (50, 58),
+        "Clermont-Ferrand": (55, 52),
+        
+        # Ouest
+        "Nantes": (30, 55),
+        "Angers": (35, 58),
+        "La Rochelle": (30, 48),
+        "Poitiers": (40, 52),
+        
+        # Sud-Ouest
+        "Bordeaux": (30, 42),
+        "Toulouse": (45, 38),
+        "Bayonne": (20, 37),
+        "Pau": (35, 36),
+        
+        # Sud-Est
+        "Lyon": (60, 52),
+        "Grenoble": (65, 48),
+        "Saint-Étienne": (58, 50),
+        "Valence": (62, 46),
+        "Avignon": (62, 42),
+        "Marseille": (65, 38),
+        "Nice": (78, 38),
+        "Montpellier": (55, 40),
+        "Perpignan": (52, 35),
+        
+        # Corse
+        "Ajaccio": (75, 25),
+        "Bastia": (80, 28),
+    }
+    
+    # Ajout des nœuds
+    for nom, (x, y) in villes.items():
+        # Création d'un nœud avec une fenêtre temporelle large par défaut
+        g.ajouter_noeud(Noeud(nom, nom, x, y, (0, 1440), 0))
+    
+    # Création des autoroutes avec distances approximatives (en km)
+    autoroutes = [
+        # Axe Nord-Sud (A1, A6, A7)
+        ("Lille", "Paris", 220),
+        ("Paris", "Lyon", 460),
+        ("Lyon", "Marseille", 320),
+        ("Marseille", "Nice", 200),
+        
+        # A10 (Paris - Bordeaux)
+        ("Paris", "Orléans", 130),
+        ("Orléans", "Tours", 110),
+        ("Tours", "Poitiers", 110),
+        ("Poitiers", "Bordeaux", 220),
+        
+        # A11 (Paris - Nantes)
+        ("Paris", "Chartres", 90),  # Chartres non listée mais important
+        ("Chartres", "Le Mans", 80),  # Le Mans non listée
+        ("Le Mans", "Angers", 80),
+        ("Angers", "Nantes", 90),
+        
+        # A13 (Paris - Caen)
+        ("Paris", "Rouen", 140),
+        ("Rouen", "Caen", 130),
+        
+        # A4 (Paris - Strasbourg)
+        ("Paris", "Reims", 140),
+        ("Reims", "Metz", 170),
+        ("Metz", "Strasbourg", 160),
+        
+        # A31 (Lyon - Nancy)
+        ("Lyon", "Dijon", 200),
+        ("Dijon", "Nancy", 240),
+        ("Nancy", "Metz", 60),
+        
+        # A75 (Clermont-Ferrand - Montpellier)
+        ("Clermont-Ferrand", "Montpellier", 340),
+        
+        # A62 (Bordeaux - Toulouse)
+        ("Bordeaux", "Toulouse", 240),
+        
+        # A61 (Toulouse - Montpellier)
+        ("Toulouse", "Montpellier", 240),
+        
+        # A9 (Montpellier - Perpignan)
+        ("Montpellier", "Perpignan", 160),
+        
+        # A8 (Aix-en-Provence - Nice) via Avignon
+        ("Avignon", "Nice", 270),
+        ("Avignon", "Marseille", 100),
+        
+        # A83 (Nantes - Bordeaux)
+        ("Nantes", "La Rochelle", 150),
+        ("La Rochelle", "Bordeaux", 180),
+        
+        # A28 (Rouen - Tours)
+        ("Rouen", "Le Mans", 160),
+        ("Le Mans", "Tours", 80),
+        
+        # A84 (Caen - Rennes)
+        ("Caen", "Rennes", 170),
+        
+        # A81 (Rennes - Nantes)
+        ("Rennes", "Nantes", 110),
+        
+        # A16 (Amiens - Paris)
+        ("Amiens", "Paris", 140),
+        
+        # A26 (Calais - Reims) via Lille
+        ("Lille", "Reims", 210),
+        
+        # A36 (Lyon - Besançon)
+        ("Lyon", "Besançon", 180),
+        ("Besançon", "Mulhouse", 140),  # Mulhouse non listée
+        
+        # A41 (Lyon - Grenoble)
+        ("Lyon", "Grenoble", 110),
+        
+        # A47 (Lyon - Saint-Étienne)
+        ("Lyon", "Saint-Étienne", 70),
+        
+        # A49 (Valence - Grenoble)
+        ("Valence", "Grenoble", 90),
+        
+        # A50 (Marseille - Toulon)
+        ("Marseille", "Toulon", 70),  # Toulon non listée
+        
+        # A64 (Bayonne - Toulouse)
+        ("Bayonne", "Pau", 90),
+        ("Pau", "Toulouse", 170),
+        
+        # A65 (Bordeaux - Pau)
+        ("Bordeaux", "Pau", 190),
+        
+        # A71 (Paris - Clermont-Ferrand)
+        ("Paris", "Orléans", 130),
+        ("Orléans", "Bourges", 120),
+        ("Bourges", "Clermont-Ferrand", 160),
+        
+        # A75 (Clermont-Ferrand - Béziers)
+        ("Clermont-Ferrand", "Béziers", 310),  # Béziers non listée
+        ("Béziers", "Montpellier", 70),
+        
+        # A89 (Bordeaux - Lyon)
+        ("Bordeaux", "Périgueux", 120),  # Périgueux non listée
+        ("Périgueux", "Clermont-Ferrand", 190),
+        ("Clermont-Ferrand", "Lyon", 170),
+        
+        # Liaisons Bretagne
+        ("Rennes", "Brest", 240),
+        
+        # Liaisons Corse (via ferries simplifiés)
+        ("Nice", "Bastia", 180),  # Distance maritime approximative
+        ("Marseille", "Ajaccio", 220),
+        ("Ajaccio", "Bastia", 150),
+    ]
+    
+    # Ajout des autoroutes
+    for source, cible, distance in autoroutes:
+        # Vérifier que les villes existent dans le dictionnaire
+        if source in villes and cible in villes:
+            g.ajouter_arete(source, cible, poids=distance)
+        else:
+            # Ajouter des villes intermédiaires si nécessaire
+            if source not in villes:
+                # Ajouter la ville manquante avec coordonnées approximatives
+                if source == "Chartres":
+                    g.ajouter_noeud(Noeud(source, source, 40, 68, (0, 1440), 0))
+                    villes[source] = (40, 68)
+                elif source == "Le Mans":
+                    g.ajouter_noeud(Noeud(source, source, 38, 62, (0, 1440), 0))
+                    villes[source] = (38, 62)
+                elif source == "Mulhouse":
+                    g.ajouter_noeud(Noeud(source, source, 74, 66, (0, 1440), 0))
+                    villes[source] = (74, 66)
+                elif source == "Toulon":
+                    g.ajouter_noeud(Noeud(source, source, 67, 37, (0, 1440), 0))
+                    villes[source] = (67, 37)
+                elif source == "Périgueux":
+                    g.ajouter_noeud(Noeud(source, source, 42, 48, (0, 1440), 0))
+                    villes[source] = (42, 48)
+                elif source == "Béziers":
+                    g.ajouter_noeud(Noeud(source, source, 55, 39, (0, 1440), 0))
+                    villes[source] = (55, 39)
+                elif source == "Calais":
+                    g.ajouter_noeud(Noeud(source, source, 45, 98, (0, 1440), 0))
+                    villes[source] = (45, 98)
+            
+            if cible not in villes:
+                if cible == "Chartres":
+                    g.ajouter_noeud(Noeud(cible, cible, 40, 68, (0, 1440), 0))
+                    villes[cible] = (40, 68)
+                elif cible == "Le Mans":
+                    g.ajouter_noeud(Noeud(cible, cible, 38, 62, (0, 1440), 0))
+                    villes[cible] = (38, 62)
+                elif cible == "Mulhouse":
+                    g.ajouter_noeud(Noeud(cible, cible, 74, 66, (0, 1440), 0))
+                    villes[cible] = (74, 66)
+                elif cible == "Toulon":
+                    g.ajouter_noeud(Noeud(cible, cible, 67, 37, (0, 1440), 0))
+                    villes[cible] = (67, 37)
+                elif cible == "Périgueux":
+                    g.ajouter_noeud(Noeud(cible, cible, 42, 48, (0, 1440), 0))
+                    villes[cible] = (42, 48)
+                elif cible == "Béziers":
+                    g.ajouter_noeud(Noeud(cible, cible, 55, 39, (0, 1440), 0))
+                    villes[cible] = (55, 39)
+                elif cible == "Calais":
+                    g.ajouter_noeud(Noeud(cible, cible, 45, 98, (0, 1440), 0))
+                    villes[cible] = (45, 98)
+            
+            # Ajouter l'arête après avoir ajouté les nœuds manquants
+            if source in villes and cible in villes:
+                g.ajouter_arete(source, cible, poids=distance)
+    
+    # Ajout de quelques liaisons supplémentaires pour améliorer la connectivité
+    liaisons_supplementaires = [
+        ("Paris", "Amiens", 150),
+        ("Paris", "Chartres", 90),
+        ("Lyon", "Valence", 100),
+        ("Valence", "Avignon", 80),
+        ("Tours", "Bourges", 120),
+        ("Bourges", "Dijon", 200),
+        ("Dijon", "Besançon", 90),
+        ("Strasbourg", "Mulhouse", 110),
+        ("Mulhouse", "Besançon", 140),
+        ("Grenoble", "Valence", 90),
+        ("Grenoble", "Avignon", 150),
+        ("Nantes", "La Rochelle", 150),
+        ("La Rochelle", "Poitiers", 120),
+        ("Brest", "Rennes", 240),
+        ("Bayonne", "Bordeaux", 180),
+        ("Pau", "Toulouse", 170),
+    ]
+    
+    for source, cible, distance in liaisons_supplementaires:
+        if source in villes and cible in villes:
+            g.ajouter_arete(source, cible, poids=distance)
+    
+    # Création de la flotte
+    flotte = [camion1, camion2, camion3]
+    
+    # Définition des demandes futures (simulation de livraisons)
+    demandes_futures = {
+        5: [("Lyon", 5, (5, 100)), ("Marseille", 8, (5, 120)), ("Bordeaux", 6, (5, 110))],
+        10: [("Strasbourg", 4, (10, 90)), ("Nantes", 7, (10, 95)), ("Toulouse", 5, (10, 105))],
+        15: [("Lille", 6, (15, 100)), ("Nice", 8, (15, 130)), ("Rennes", 4, (15, 85))],
+        20: [("Montpellier", 5, (20, 110)), ("Grenoble", 6, (20, 95)), ("Caen", 3, (20, 80))],
+        25: [("Paris", 10, (25, 120)), ("Brest", 7, (25, 100)), ("Perpignan", 5, (25, 115))],
+        30: [("Dijon", 4, (30, 90)), ("Clermont-Ferrand", 6, (30, 100)), ("Angers", 5, (30, 85))],
+    }
+    
+    # Convertir les noms de villes en identifiants pour les demandes futures
+    demandes_futures_formatees = {}
+    for tour, demandes in demandes_futures.items():
+        demandes_formatees = []
+        for ville, quantite, fenetre in demandes:
+            if ville in villes:
+                demandes_formatees.append((ville, quantite, fenetre))
+        if demandes_formatees:
+            demandes_futures_formatees[tour] = demandes_formatees
+    
+    print(f"Graphe de France créé avec {len(g.noeuds)} villes et {len(g.aretes)} autoroutes")
+    print(f"Principales villes: {', '.join(list(villes.keys())[:10])}...")
+    
+    return g, flotte, demandes_futures_formatees
+
 
 if __name__ == "__main__" :
-    g, flotte, demandes_futures = graphe_exemple()
+    g, flotte, demandes_futures = graphe_france()
 
     print("\n--- DÉBUT DE LA SIMULATION (MODE SURCHARGE) ---")
     tour_actuel = 1
