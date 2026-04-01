@@ -110,7 +110,7 @@ def simulation_centralise(g, flotte, demandes_futures, depot=0):
             
         tour_actuel += 1
         
-        if tour_actuel > 250: 
+        if tour_actuel > 8000: 
             print("Limite de tours atteinte.")
             break
             
@@ -123,5 +123,7 @@ def simulation_centralise(g, flotte, demandes_futures, depot=0):
 if __name__ == "__main__" :
     # choisir le graphe
     #g, flotte, demandes_futures = Classe_PDR.graphe_exemple()
-    g, flotte, demandes_futures = Classe_PDR.graphe_complexe()
-    simulation_centralise(g, flotte, demandes_futures, depot=15) # mettre le bon dépôt (15: graphe complexe)(0:graphe exemple)(0: graphe deux villes)
+    g, flotte, demandes_futures = Classe_PDR.graphe_france()
+    simulation_centralise(g, flotte, demandes_futures, depot="Paris")
+    #simulation_centralise(g, flotte, demandes_futures, depot=0)
+    #simulation_centralise(g, flotte, demandes_futures, depot=15) # mettre le bon dépôt (15: graphe complexe)(0:graphe exemple)(0: graphe deux villes)
