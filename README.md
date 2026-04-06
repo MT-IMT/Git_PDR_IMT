@@ -204,6 +204,6 @@ Graphe deux villes:
 - Décentralisé :
 
 Graphe complexe: 
--Centralisé : 78 tours
--Décentralisé : 84 tours
+-Centralisé : 75 tours
+-Décentralisé : 77 tours
 
